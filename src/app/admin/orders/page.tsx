@@ -13,6 +13,7 @@ import {
 import { Search } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
 const statusOptions = ["all", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED"];
 const statusLabels: Record<string, string> = {
@@ -23,13 +24,22 @@ const statusLabels: Record<string, string> = {
   DELIVERED: "Delivered",
 };
 
-const orders = [
-  { id: "1", orderNumber: "CC-00015", customer: "Amal Silva", email: "amal@example.com", status: "CONFIRMED", totalAmount: 389900, itemCount: 1, createdAt: "2024-12-20T10:30:00Z" },
-  { id: "2", orderNumber: "CC-00014", customer: "Nimali Fernando", email: "nimali@example.com", status: "PROCESSING", totalAmount: 179800, itemCount: 2, createdAt: "2024-12-19T14:20:00Z" },
-  { id: "3", orderNumber: "CC-00013", customer: "Ruwan Bandara", email: "ruwan@example.com", status: "SHIPPED", totalAmount: 89900, itemCount: 1, createdAt: "2024-12-18T09:15:00Z" },
-  { id: "4", orderNumber: "CC-00012", customer: "Priya Jayasuriya", email: "priya@example.com", status: "DELIVERED", totalAmount: 569700, itemCount: 3, createdAt: "2024-12-15T10:30:00Z" },
-  { id: "5", orderNumber: "CC-00011", customer: "Kasun Perera", email: "kasun@example.com", status: "PENDING", totalAmount: 24900, itemCount: 1, createdAt: "2024-12-14T16:45:00Z" },
-];
+interface ApiOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: string | number;
+  createdAt: string;
+  user: { name: string | null; email: string | null } | null;
+  items: { id: string }[];
+}
+
+interface OrdersResponse {
+  orders: ApiOrder[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 
 const statusChipColor: Record<string, "info" | "warning" | "secondary" | "success" | "default" | "error"> = {
   CONFIRMED: "info",
@@ -114,6 +124,18 @@ const columns: GridColDef[] = [
 export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const { data } = useApi<OrdersResponse>("/api/admin/orders");
+
+  const orders = (data?.orders ?? []).map((o) => ({
+    id: o.id,
+    orderNumber: o.orderNumber,
+    customer: o.user?.name ?? "—",
+    email: o.user?.email ?? "",
+    status: o.status,
+    totalAmount: o.totalAmount,
+    itemCount: o.items?.length ?? 0,
+    createdAt: o.createdAt,
+  }));
 
   const filtered = orders.filter((o) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;

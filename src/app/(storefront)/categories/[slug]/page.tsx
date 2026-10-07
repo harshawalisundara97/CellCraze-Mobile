@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ProductCard } from "@/components/storefront/product-card";
@@ -11,6 +12,20 @@ import {
 } from "@/types/api";
 
 export default function CategoryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-[40px] py-16 text-[15px] text-muted max-md:px-gutter-mobile">
+          Loading category...
+        </div>
+      }
+    >
+      <CategoryContent />
+    </Suspense>
+  );
+}
+
+function CategoryContent() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
 

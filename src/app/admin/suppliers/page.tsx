@@ -11,12 +11,18 @@ import {
 } from "@mui/material";
 import { Add, Search } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { useApi } from "@/hooks/use-api";
 
-const suppliers = [
-  { id: "1", name: "MobiTech Distributors", contactPerson: "Amal Silva", email: "amal@mobitech.lk", phone: "+94112345678", address: "45 Vauxhall Street, Colombo 02", isActive: true, poCount: 12 },
-  { id: "2", name: "DigiWorld Imports", contactPerson: "Priya Jayasuriya", email: "priya@digiworld.lk", phone: "+94112987654", address: "12 Duplication Road, Colombo 04", isActive: true, poCount: 8 },
-  { id: "3", name: "TechHub Lanka", contactPerson: "Ruwan Bandara", email: "ruwan@techhub.lk", phone: "+94113456789", address: "78 Galle Road, Mount Lavinia", isActive: true, poCount: 5 },
-];
+interface ApiSupplier {
+  id: string;
+  name: string;
+  contactPerson: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  isActive: boolean;
+  _count: { purchaseOrders: number };
+}
 
 const columns: GridColDef[] = [
   {
@@ -68,6 +74,19 @@ const columns: GridColDef[] = [
 
 export default function AdminSuppliersPage() {
   const [search, setSearch] = useState("");
+  const { data } = useApi<ApiSupplier[]>("/api/admin/suppliers");
+
+  const suppliers = (data ?? []).map((s) => ({
+    id: s.id,
+    name: s.name,
+    contactPerson: s.contactPerson ?? "",
+    email: s.email ?? "",
+    phone: s.phone ?? "",
+    address: s.address ?? "",
+    isActive: s.isActive,
+    poCount: s._count?.purchaseOrders ?? 0,
+  }));
+
   const filtered = suppliers.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()) || s.contactPerson.toLowerCase().includes(search.toLowerCase()));
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -17,6 +17,7 @@ import {
   LinearProgress,
 } from "@mui/material";
 import { formatCurrency } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
 const periodOptions = [
   { label: "7 days", value: "7" },
@@ -24,41 +25,70 @@ const periodOptions = [
   { label: "90 days", value: "90" },
 ];
 
-const salesData = [
-  { date: "Dec 14", revenue: 389900, orders: 2, cost: 320000 },
-  { date: "Dec 15", revenue: 569700, orders: 3, cost: 445000 },
-  { date: "Dec 16", revenue: 179800, orders: 1, cost: 122000 },
-  { date: "Dec 17", revenue: 449900, orders: 2, cost: 348000 },
-  { date: "Dec 18", revenue: 89900, orders: 1, cost: 62000 },
-  { date: "Dec 19", revenue: 639800, orders: 4, cost: 502000 },
-  { date: "Dec 20", revenue: 389900, orders: 2, cost: 320000 },
-];
+interface SalesReport {
+  totalRevenue: number;
+  totalCost: number;
+  grossProfit: number;
+  profitMargin: number;
+  totalOrders: number;
+  averageOrderValue: number;
+}
 
-const topProducts = [
-  { name: "Galaxy S25 Ultra", sold: 28, revenue: 10917200 },
-  { name: "iPhone 16 Pro", sold: 22, revenue: 9897800 },
-  { name: "Sony WH-1000XM5", sold: 18, revenue: 1618200 },
-  { name: "AirPods Pro 3", sold: 15, revenue: 1198500 },
-  { name: "Anker 737 Power Bank", sold: 12, revenue: 418800 },
-];
+interface TopProductApi {
+  productId: string;
+  name: string;
+  sku: string;
+  unitsSold: number;
+  revenue: number;
+}
 
-const categorySales = [
-  { category: "Phones", revenue: 24500000, percentage: 62 },
-  { category: "Headphones", revenue: 4200000, percentage: 11 },
-  { category: "Earphones", revenue: 3800000, percentage: 10 },
-  { category: "Chargers", revenue: 2100000, percentage: 5 },
-  { category: "Smartwatches", revenue: 3500000, percentage: 9 },
-  { category: "Accessories", revenue: 1200000, percentage: 3 },
-];
+interface CategorySaleApi {
+  name: string;
+  total: number;
+  percentage: number;
+}
 
 export default function AdminReportsPage() {
+  return (
+    <Suspense fallback={<Box sx={{ p: 4 }}><Typography color="text.secondary">Loading reports...</Typography></Box>}>
+      <ReportsContent />
+    </Suspense>
+  );
+}
+
+function ReportsContent() {
   const [period, setPeriod] = useState("30");
 
-  const totalRevenue = salesData.reduce((s, d) => s + d.revenue, 0);
-  const totalCost = salesData.reduce((s, d) => s + d.cost, 0);
-  const totalOrders = salesData.reduce((s, d) => s + d.orders, 0);
-  const profit = totalRevenue - totalCost;
-  const margin = Math.round((profit / totalRevenue) * 100);
+  const salesUrl = useMemo(() => {
+    const end = new Date();
+    const start = new Date(Date.now() - Number(period) * 86400000);
+    return `/api/admin/reports/sales?startDate=${start.toISOString()}&endDate=${end.toISOString()}`;
+  }, [period]);
+
+  const { data: salesReport } = useApi<SalesReport>(salesUrl);
+  const { data: topData } = useApi<TopProductApi[]>("/api/admin/reports/top-products");
+  const { data: catData } = useApi<CategorySaleApi[]>("/api/admin/reports/category-sales");
+
+  // reports/sales returns an aggregate (not per-day rows); it drives the KPI cards.
+  const totalRevenue = salesReport?.totalRevenue ?? 0;
+  const profit = salesReport?.grossProfit ?? 0;
+  const totalOrders = salesReport?.totalOrders ?? 0;
+  const margin = salesReport?.profitMargin ?? 0;
+
+  // No per-day endpoint among the three report routes, so the daily table has no source.
+  const salesData: { date: string; revenue: number; orders: number; cost: number }[] = [];
+
+  const topProducts = (topData ?? []).map((p) => ({
+    name: p.name,
+    sold: p.unitsSold,
+    revenue: p.revenue,
+  }));
+
+  const categorySales = (catData ?? []).map((c) => ({
+    category: c.name,
+    revenue: c.total,
+    percentage: c.percentage,
+  }));
 
   return (
     <Box>

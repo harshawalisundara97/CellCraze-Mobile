@@ -21,29 +21,34 @@ import {
   ArrowUpward,
   ArrowDownward,
 } from "@mui/icons-material";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
-const stats = [
-  { label: "Revenue today", value: formatCurrency(12450000), change: "+12.5%", up: true, icon: TrendingUp },
-  { label: "Orders today", value: "23", change: "+8.2%", up: true, icon: ShoppingCart },
-  { label: "New customers", value: "5", change: "-2.1%", up: false, icon: People },
-  { label: "Low stock alerts", value: "4", change: "", up: false, icon: Warning },
-];
+interface DashboardStats {
+  revenueToday: number;
+  ordersToday: number;
+  newCustomers: number;
+  outOfStock: number;
+  lowStock: number;
+}
 
-const recentOrders = [
-  { orderNumber: "CC-00015", customer: "Amal Silva", total: 389900, status: "CONFIRMED", date: "2 min ago" },
-  { orderNumber: "CC-00014", customer: "Nimali Fernando", total: 179800, status: "PROCESSING", date: "15 min ago" },
-  { orderNumber: "CC-00013", customer: "Ruwan Bandara", total: 89900, status: "SHIPPED", date: "1 hour ago" },
-  { orderNumber: "CC-00012", customer: "Priya Jayasuriya", total: 449900, status: "DELIVERED", date: "3 hours ago" },
-  { orderNumber: "CC-00011", customer: "Kasun Perera", total: 24900, status: "CONFIRMED", date: "5 hours ago" },
-];
+interface RecentOrderApi {
+  id: string;
+  orderNumber: string;
+  totalAmount: string | number;
+  status: string;
+  createdAt: string;
+  user: { name: string | null } | null;
+}
 
-const lowStockItems = [
-  { name: "Galaxy Watch Ultra", sku: "SGW-U7", stock: 3, reorder: 2, category: "Smartwatches" },
-  { name: "AirPods Max 2", sku: "APM-2", stock: 5, reorder: 3, category: "Headphones" },
-  { name: "Galaxy Buds3 Pro", sku: "SGE-BUDS3P", stock: 0, reorder: 5, category: "Earphones" },
-  { name: "Pixel 9 Pro", sku: "PX9P-128", stock: 7, reorder: 3, category: "Phones" },
-];
+interface LowStockApi {
+  id: string;
+  name: string;
+  sku: string;
+  stockQuantity: number;
+  reorderPoint: number;
+  category: { name: string } | null;
+}
 
 const statusChipColor: Record<string, "info" | "warning" | "secondary" | "success" | "default"> = {
   CONFIRMED: "info",
@@ -54,6 +59,35 @@ const statusChipColor: Record<string, "info" | "warning" | "secondary" | "succes
 };
 
 export default function AdminDashboardPage() {
+  const { data: statsData } = useApi<DashboardStats>("/api/admin/dashboard/stats");
+  const { data: recentData } = useApi<RecentOrderApi[]>("/api/admin/dashboard/recent-orders");
+  const { data: lowStockData } = useApi<LowStockApi[]>("/api/admin/inventory/low-stock");
+
+  const stats = [
+    { label: "Revenue today", value: formatCurrency(statsData?.revenueToday ?? 0), change: "", up: true, icon: TrendingUp },
+    { label: "Orders today", value: String(statsData?.ordersToday ?? 0), change: "", up: true, icon: ShoppingCart },
+    { label: "New customers", value: String(statsData?.newCustomers ?? 0), change: "", up: true, icon: People },
+    { label: "Low stock alerts", value: String(statsData?.lowStock ?? 0), change: "", up: false, icon: Warning },
+  ];
+
+  const recentOrders = (recentData ?? []).map((o) => ({
+    id: o.id,
+    orderNumber: o.orderNumber,
+    customer: o.user?.name ?? "—",
+    total: o.totalAmount,
+    status: o.status,
+    date: formatDate(o.createdAt),
+  }));
+
+  const lowStockItems = (lowStockData ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    sku: p.sku,
+    stock: p.stockQuantity,
+    reorder: p.reorderPoint,
+    category: p.category?.name ?? "",
+  }));
+
   return (
     <Box>
       <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
@@ -19,6 +19,20 @@ interface ProductDetail extends ApiProduct {
 }
 
 export default function ProductDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-[40px] py-16 text-[15px] text-muted max-md:px-gutter-mobile">
+          Loading product...
+        </div>
+      }
+    >
+      <ProductDetailContent />
+    </Suspense>
+  );
+}
+
+function ProductDetailContent() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
   const slug = params?.slug;

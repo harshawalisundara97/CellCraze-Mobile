@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { StatusMarker } from "@/components/ui/status-marker";
@@ -39,6 +40,20 @@ interface OrderDetail {
 }
 
 export default function OrderDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-[40px] py-16 text-[15px] text-muted max-md:px-gutter-mobile">
+          Loading order...
+        </div>
+      }
+    >
+      <OrderDetailContent />
+    </Suspense>
+  );
+}
+
+function OrderDetailContent() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const { data: order, loading, error } = useApi<OrderDetail>(

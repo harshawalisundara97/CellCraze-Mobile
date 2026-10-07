@@ -15,6 +15,7 @@ import {
 import { Search, Inventory2, WarningAmber, ErrorOutlined } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { formatCurrency } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
 const viewOptions = [
   { label: "All", value: "all" },
@@ -22,21 +23,22 @@ const viewOptions = [
   { label: "Out of stock", value: "out" },
 ];
 
-const inventory = [
-  { id: "1", sku: "SM-S938B-256", name: "Galaxy S25 Ultra", category: "Phones", stockQuantity: 12, reorderPoint: 5, costPrice: 320000, value: 3840000 },
-  { id: "2", sku: "IP16P-256", name: "iPhone 16 Pro", category: "Phones", stockQuantity: 15, reorderPoint: 5, costPrice: 380000, value: 5700000 },
-  { id: "3", sku: "SONY-WH1000XM5", name: "Sony WH-1000XM5", category: "Headphones", stockQuantity: 18, reorderPoint: 5, costPrice: 62000, value: 1116000 },
-  { id: "4", sku: "SGE-BUDS3P", name: "Galaxy Buds3 Pro", category: "Earphones", stockQuantity: 0, reorderPoint: 5, costPrice: 40000, value: 0 },
-  { id: "5", sku: "SGW-U7", name: "Galaxy Watch Ultra", category: "Smartwatches", stockQuantity: 3, reorderPoint: 2, costPrice: 115000, value: 345000 },
-  { id: "6", sku: "APM-2", name: "AirPods Max 2", category: "Headphones", stockQuantity: 5, reorderPoint: 3, costPrice: 110000, value: 550000 },
-  { id: "7", sku: "USBC-2M", name: "Anker USB-C Cable 2m", category: "Accessories", stockQuantity: 100, reorderPoint: 30, costPrice: 1200, value: 120000 },
-  { id: "8", sku: "SPG-ULTRA", name: "Spigen Ultra Hybrid Case", category: "Accessories", stockQuantity: 50, reorderPoint: 20, costPrice: 2000, value: 100000 },
-];
+interface ApiInventoryProduct {
+  id: string;
+  sku: string;
+  name: string;
+  stockQuantity: number;
+  reorderPoint: number;
+  reorderQty: number;
+  costPrice: string | number;
+  price: string | number;
+  category: { name: string } | null;
+}
 
-const totalValue = inventory.reduce((s, i) => s + i.value, 0);
-const totalItems = inventory.reduce((s, i) => s + i.stockQuantity, 0);
-const lowStockCount = inventory.filter((i) => i.stockQuantity > 0 && i.stockQuantity <= i.reorderPoint).length;
-const outOfStockCount = inventory.filter((i) => i.stockQuantity === 0).length;
+interface InventoryResponse {
+  products: ApiInventoryProduct[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
 
 const columns: GridColDef[] = [
   { field: "sku", headerName: "SKU", width: 140 },
@@ -81,6 +83,23 @@ const columns: GridColDef[] = [
 export default function AdminInventoryPage() {
   const [view, setView] = useState("all");
   const [search, setSearch] = useState("");
+  const { data } = useApi<InventoryResponse>("/api/admin/inventory");
+
+  const inventory = (data?.products ?? []).map((p) => ({
+    id: p.id,
+    sku: p.sku,
+    name: p.name,
+    category: p.category?.name ?? "",
+    stockQuantity: p.stockQuantity,
+    reorderPoint: p.reorderPoint,
+    costPrice: Number(p.costPrice),
+    value: Number(p.costPrice) * p.stockQuantity,
+  }));
+
+  const totalValue = inventory.reduce((s, i) => s + i.value, 0);
+  const totalItems = inventory.reduce((s, i) => s + i.stockQuantity, 0);
+  const lowStockCount = inventory.filter((i) => i.stockQuantity > 0 && i.stockQuantity <= i.reorderPoint).length;
+  const outOfStockCount = inventory.filter((i) => i.stockQuantity === 0).length;
 
   const filtered = inventory.filter((item) => {
     if (view === "low" && item.stockQuantity > item.reorderPoint) return false;

@@ -5,17 +5,24 @@ import { Box, Typography, Button, TextField, Chip, InputAdornment } from "@mui/m
 import { Add, Search } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { formatCurrency } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
-const products = [
-  { id: "1", sku: "SM-S938B-256", name: "Galaxy S25 Ultra", brand: "Samsung", category: "Phones", price: 389900, stockQuantity: 12, isActive: true, isFeatured: true },
-  { id: "2", sku: "IP16P-256", name: "iPhone 16 Pro", brand: "Apple", category: "Phones", price: 449900, stockQuantity: 15, isActive: true, isFeatured: true },
-  { id: "3", sku: "SONY-WH1000XM5", name: "Sony WH-1000XM5", brand: "Sony", category: "Headphones", price: 89900, stockQuantity: 18, isActive: true, isFeatured: true },
-  { id: "4", sku: "SGE-BUDS3P", name: "Galaxy Buds3 Pro", brand: "Samsung", category: "Earphones", price: 59900, stockQuantity: 0, isActive: true, isFeatured: false },
-  { id: "5", sku: "ANK-737", name: "Anker 737 Power Bank", brand: "Anker", category: "Chargers", price: 34900, stockQuantity: 25, isActive: true, isFeatured: true },
-  { id: "6", sku: "AW-S10", name: "Apple Watch Series 10", brand: "Apple", category: "Smartwatches", price: 129900, stockQuantity: 10, isActive: true, isFeatured: true },
-  { id: "7", sku: "SGW-U7", name: "Galaxy Watch Ultra", brand: "Samsung", category: "Smartwatches", price: 159900, stockQuantity: 3, isActive: true, isFeatured: false },
-  { id: "8", sku: "SPG-ULTRA", name: "Spigen Ultra Hybrid Case", brand: "Spigen", category: "Accessories", price: 4900, stockQuantity: 50, isActive: true, isFeatured: false },
-];
+interface ApiProduct {
+  id: string;
+  sku: string;
+  name: string;
+  brand: string | null;
+  price: string | number;
+  stockQuantity: number;
+  isActive: boolean;
+  isFeatured: boolean;
+  category: { name: string; slug: string } | null;
+}
+
+interface ProductsResponse {
+  products: ApiProduct[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
 
 const columns: GridColDef[] = [
   { field: "sku", headerName: "SKU", width: 140 },
@@ -62,6 +69,12 @@ const columns: GridColDef[] = [
 
 export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
+  const { data } = useApi<ProductsResponse>("/api/admin/products");
+
+  const products = (data?.products ?? []).map((p) => ({
+    ...p,
+    category: p.category?.name ?? "",
+  }));
 
   const filtered = products.filter(
     (p) =>

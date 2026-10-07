@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
 const statusOptions = [
   { label: "All", value: "all" },
@@ -19,12 +20,25 @@ const statusOptions = [
   { label: "Overdue", value: "OVERDUE" },
 ];
 
-const invoices = [
-  { id: "1", invoiceNumber: "INV-2024-0012", orderNumber: "CC-00012", customer: "Nimali Fernando", status: "PAID", totalAmount: 569700, createdAt: "2024-12-18T10:00:00Z", paidAt: "2024-12-18T10:32:00Z" },
-  { id: "2", invoiceNumber: "INV-2024-0011", orderNumber: "CC-00011", customer: "Kasun Perera", status: "SENT", totalAmount: 24900, createdAt: "2024-12-14T16:00:00Z", paidAt: null },
-  { id: "3", invoiceNumber: "INV-2024-0010", orderNumber: "CC-00010", customer: "Amal Silva", status: "OVERDUE", totalAmount: 179800, createdAt: "2024-12-08T09:00:00Z", paidAt: null },
-  { id: "4", invoiceNumber: "INV-2024-0009", orderNumber: "CC-00009", customer: "Priya Jayasuriya", status: "PAID", totalAmount: 449900, createdAt: "2024-12-05T14:00:00Z", paidAt: "2024-12-06T11:00:00Z" },
-];
+interface ApiInvoice {
+  id: string;
+  invoiceNumber: string;
+  status: string;
+  totalAmount: string | number;
+  createdAt: string;
+  paidAt: string | null;
+  order: {
+    orderNumber: string;
+    user: { name: string | null; email: string | null } | null;
+  } | null;
+}
+
+interface InvoicesResponse {
+  invoices: ApiInvoice[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 
 const statusChipColor: Record<string, "success" | "info" | "error" | "default" | "warning"> = {
   DRAFT: "default",
@@ -95,6 +109,19 @@ const columns: GridColDef[] = [
 
 export default function AdminInvoicesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
+  const { data } = useApi<InvoicesResponse>("/api/admin/invoices");
+
+  const invoices = (data?.invoices ?? []).map((inv) => ({
+    id: inv.id,
+    invoiceNumber: inv.invoiceNumber,
+    orderNumber: inv.order?.orderNumber ?? "",
+    customer: inv.order?.user?.name ?? "—",
+    status: inv.status,
+    totalAmount: inv.totalAmount,
+    createdAt: inv.createdAt,
+    paidAt: inv.paidAt,
+  }));
+
   const filtered = invoices.filter((inv) => statusFilter === "all" || inv.status === statusFilter);
 
   return (
