@@ -49,5 +49,20 @@ export function useApi<T>(url: string | null): ApiState<T> & { refetch: () => vo
     };
   }, [url, nonce]);
 
+  // Refetch when the user returns to the tab/page, so a view restored from the
+  // browser or router cache shows current data instead of a stale snapshot.
+  useEffect(() => {
+    if (!url) return;
+    const refetch = () => {
+      if (document.visibilityState === "visible") setNonce((n) => n + 1);
+    };
+    window.addEventListener("focus", refetch);
+    document.addEventListener("visibilitychange", refetch);
+    return () => {
+      window.removeEventListener("focus", refetch);
+      document.removeEventListener("visibilitychange", refetch);
+    };
+  }, [url]);
+
   return { ...state, refetch: () => setNonce((n) => n + 1) };
 }
