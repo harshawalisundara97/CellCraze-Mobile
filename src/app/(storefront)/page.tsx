@@ -13,45 +13,46 @@ import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { CategoryCard, type CategoryCardData } from "@/components/storefront/category-card";
 import { ProductCard, type ProductCardData } from "@/components/storefront/product-card";
 import { formatCurrency } from "@/lib/utils";
-
-/* ------------------------------------------------------------------ */
-/*  Mock data                                                         */
-/* ------------------------------------------------------------------ */
-
-const categories: CategoryCardData[] = [
-  { name: "Phones", slug: "phones", image: null, productCount: 42, index: 1 },
-  { name: "Headphones", slug: "headphones", image: null, productCount: 18, index: 2 },
-  { name: "Earphones", slug: "earphones", image: null, productCount: 24, index: 3 },
-  { name: "Chargers", slug: "chargers", image: null, productCount: 31, index: 4 },
-  { name: "Smartwatches", slug: "smartwatches", image: null, productCount: 15, index: 5 },
-  { name: "Accessories", slug: "accessories", image: null, productCount: 56, index: 6 },
-];
-
-const featuredProducts: ProductCardData[] = [
-  { id: "1", name: "Galaxy S25 Ultra", slug: "galaxy-s25-ultra", brand: "Samsung", price: 499900, compareAtPrice: 549900, stockQuantity: 12, images: [{ url: "/placeholder.png", altText: "Galaxy S25 Ultra" }], categorySlug: "phones" },
-  { id: "2", name: "iPhone 16 Pro", slug: "iphone-16-pro", brand: "Apple", price: 524900, compareAtPrice: null, stockQuantity: 8, images: [{ url: "/placeholder.png", altText: "iPhone 16 Pro" }], categorySlug: "phones" },
-  { id: "3", name: "WH-1000XM5", slug: "sony-wh-1000xm5", brand: "Sony", price: 89900, compareAtPrice: 109900, stockQuantity: 22, images: [{ url: "/placeholder.png", altText: "Sony WH-1000XM5" }], categorySlug: "headphones" },
-  { id: "4", name: "Galaxy Watch 7", slug: "galaxy-watch-7", brand: "Samsung", price: 74900, compareAtPrice: null, stockQuantity: 5, images: [{ url: "/placeholder.png", altText: "Galaxy Watch 7" }], categorySlug: "smartwatches" },
-  { id: "5", name: "Pixel 9 Pro", slug: "pixel-9-pro", brand: "Google", price: 389900, compareAtPrice: 419900, stockQuantity: 0, images: [{ url: "/placeholder.png", altText: "Pixel 9 Pro" }], categorySlug: "phones" },
-  { id: "6", name: "AirPods Pro 2", slug: "airpods-pro-2", brand: "Apple", price: 64900, compareAtPrice: null, stockQuantity: 30, images: [{ url: "/placeholder.png", altText: "AirPods Pro 2" }], categorySlug: "earphones" },
-  { id: "7", name: "Galaxy Buds3 Pro", slug: "galaxy-buds3-pro", brand: "Samsung", price: 49900, compareAtPrice: 54900, stockQuantity: 18, images: [{ url: "/placeholder.png", altText: "Galaxy Buds3 Pro" }], categorySlug: "earphones" },
-  { id: "8", name: "65W GaN Charger", slug: "65w-gan-charger", brand: "Anker", price: 12900, compareAtPrice: 14900, stockQuantity: 45, images: [{ url: "/placeholder.png", altText: "Anker 65W GaN" }], categorySlug: "chargers" },
-];
-
-const newArrivals = [
-  { id: "10", brand: "Samsung", name: "Galaxy S25+", category: "Phones", price: 424900, slug: "galaxy-s25-plus" },
-  { id: "11", brand: "Apple", name: "iPhone 16e", category: "Phones", price: 199900, slug: "iphone-16e" },
-  { id: "12", brand: "Sony", name: "WF-1000XM5", category: "Earphones", price: 72900, slug: "sony-wf-1000xm5" },
-  { id: "13", brand: "Xiaomi", name: "14T Pro", category: "Phones", price: 189900, slug: "xiaomi-14t-pro" },
-  { id: "14", brand: "Samsung", name: "Galaxy Fit3", category: "Smartwatches", price: 14900, slug: "galaxy-fit3" },
-  { id: "15", brand: "Baseus", name: "100W USB-C Cable", category: "Accessories", price: 2490, slug: "baseus-100w-usbc" },
-];
+import { useApi } from "@/hooks/use-api";
+import {
+  type ApiProduct,
+  type ApiCategory,
+  type ProductListResponse,
+  toProductCardData,
+} from "@/types/api";
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                              */
 /* ------------------------------------------------------------------ */
 
 export default function HomePage() {
+  const { data: featured } = useApi<ApiProduct[]>("/api/products/featured");
+  const { data: categoryData } = useApi<ApiCategory[]>("/api/categories");
+  const { data: newest } = useApi<ProductListResponse>(
+    "/api/products?sort=newest&limit=6",
+  );
+
+  const categories: CategoryCardData[] = (categoryData ?? []).map((cat, i) => ({
+    name: cat.name,
+    slug: cat.slug,
+    image: cat.image,
+    productCount: cat._count?.products ?? 0,
+    index: i + 1,
+  }));
+
+  const featuredProducts: ProductCardData[] = (featured ?? []).map(
+    toProductCardData,
+  );
+
+  const newArrivals = (newest?.products ?? []).map((p) => ({
+    id: p.id,
+    brand: p.brand ?? "",
+    name: p.name,
+    category: p.category?.name ?? "",
+    price: p.price,
+    slug: p.slug,
+  }));
+
   return (
     <>
       {/* ---- Hero ---- */}

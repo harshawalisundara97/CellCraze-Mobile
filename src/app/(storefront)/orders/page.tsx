@@ -4,15 +4,28 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { StatusMarker } from "@/components/ui/status-marker";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
-const orders = [
-  { id: "1", orderNumber: "CC-00012", status: "DELIVERED", totalAmount: 569700, createdAt: "2024-12-15T10:30:00Z", itemCount: 3 },
-  { id: "2", orderNumber: "CC-00011", status: "SHIPPED", totalAmount: 389900, createdAt: "2024-12-10T14:20:00Z", itemCount: 1 },
-  { id: "3", orderNumber: "CC-00010", status: "PROCESSING", totalAmount: 179800, createdAt: "2024-12-08T09:15:00Z", itemCount: 2 },
-  { id: "4", orderNumber: "CC-00009", status: "CANCELLED", totalAmount: 89900, createdAt: "2024-11-28T16:45:00Z", itemCount: 1 },
-];
+interface OrderListItem {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: number;
+  createdAt: string;
+  items: { id: string; quantity: number }[];
+}
+
+interface OrdersResponse {
+  orders: OrderListItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 
 export default function OrdersPage() {
+  const { data, loading, error } = useApi<OrdersResponse>("/api/orders");
+  const orders = data?.orders ?? [];
+
   return (
     <div className="px-[40px] max-md:px-gutter-mobile">
       <nav className="py-3 text-[13px] text-muted">
@@ -22,29 +35,47 @@ export default function OrdersPage() {
       </nav>
 
       <h1 className="text-[56px] max-md:text-[36px] mb-2">My orders</h1>
-      <p className="text-[15px] text-muted mb-8">{orders.length} orders</p>
 
-      <div className="border-t-2 border-divider">
-        {orders.map((order) => (
-          <Link
-            key={order.id}
-            href={`/orders/${order.id}`}
-            className="flex items-center gap-5 py-5 border-b border-divider hover:bg-ink/[0.02] transition-colors"
-          >
-            <span className="text-[15px] font-[800] tnum w-[110px] shrink-0">{order.orderNumber}</span>
-            <StatusMarker status={order.status as any} />
-            <span className="text-[14px] capitalize flex-1">
-              {order.status.toLowerCase().replace("_", " ")}
-            </span>
-            <span className="text-[13px] text-muted shrink-0">{order.itemCount} item{order.itemCount !== 1 ? "s" : ""}</span>
-            <span className="text-[13px] text-muted shrink-0 w-[100px]">{formatDate(order.createdAt)}</span>
-            <span className="text-[15px] font-[800] tnum shrink-0 w-[120px] text-right">
-              {formatCurrency(order.totalAmount)}
-            </span>
-            <ArrowRight size={16} className="text-ink/30 shrink-0" />
-          </Link>
-        ))}
-      </div>
+      {loading ? (
+        <p className="text-[15px] text-muted mb-8">Loading orders...</p>
+      ) : error ? (
+        <p className="text-[15px] text-muted mb-8">
+          Please <Link href="/login" className="text-ink font-semibold hover:underline">sign in</Link> to view your orders.
+        </p>
+      ) : orders.length === 0 ? (
+        <p className="text-[15px] text-muted mb-8">
+          You have no orders yet.{" "}
+          <Link href="/products" className="text-ink font-semibold hover:underline">Start shopping</Link>.
+        </p>
+      ) : (
+        <>
+          <p className="text-[15px] text-muted mb-8">{orders.length} orders</p>
+          <div className="border-t-2 border-divider">
+            {orders.map((order) => {
+              const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
+              return (
+                <Link
+                  key={order.id}
+                  href={`/orders/${order.id}`}
+                  className="flex items-center gap-5 py-5 border-b border-divider hover:bg-ink/[0.02] transition-colors"
+                >
+                  <span className="text-[15px] font-[800] tnum w-[110px] shrink-0">{order.orderNumber}</span>
+                  <StatusMarker status={order.status as any} />
+                  <span className="text-[14px] capitalize flex-1">
+                    {order.status.toLowerCase().replace("_", " ")}
+                  </span>
+                  <span className="text-[13px] text-muted shrink-0">{itemCount} item{itemCount !== 1 ? "s" : ""}</span>
+                  <span className="text-[13px] text-muted shrink-0 w-[100px]">{formatDate(order.createdAt)}</span>
+                  <span className="text-[15px] font-[800] tnum shrink-0 w-[120px] text-right">
+                    {formatCurrency(order.totalAmount)}
+                  </span>
+                  <ArrowRight size={16} className="text-ink/30 shrink-0" />
+                </Link>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

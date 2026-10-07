@@ -1,23 +1,12 @@
 "use client";
 
-import { Suspense, useState, useMemo } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import { ProductCard, type ProductCardData } from "@/components/storefront/product-card";
-
-/* ------------------------------------------------------------------ */
-/*  Mock data                                                         */
-/* ------------------------------------------------------------------ */
-
-const allProducts: ProductCardData[] = [
-  { id: "1", name: "Galaxy S25 Ultra", slug: "galaxy-s25-ultra", brand: "Samsung", price: 499900, compareAtPrice: 549900, stockQuantity: 12, images: [{ url: "/placeholder.png", altText: "Galaxy S25 Ultra" }], categorySlug: "phones" },
-  { id: "2", name: "iPhone 16 Pro", slug: "iphone-16-pro", brand: "Apple", price: 524900, compareAtPrice: null, stockQuantity: 8, images: [{ url: "/placeholder.png", altText: "iPhone 16 Pro" }], categorySlug: "phones" },
-  { id: "3", name: "WH-1000XM5", slug: "sony-wh-1000xm5", brand: "Sony", price: 89900, compareAtPrice: 109900, stockQuantity: 22, images: [{ url: "/placeholder.png", altText: "Sony WH-1000XM5" }], categorySlug: "headphones" },
-  { id: "5", name: "Pixel 9 Pro", slug: "pixel-9-pro", brand: "Google", price: 389900, compareAtPrice: 419900, stockQuantity: 0, images: [{ url: "/placeholder.png", altText: "Pixel 9 Pro" }], categorySlug: "phones" },
-  { id: "6", name: "AirPods Pro 2", slug: "airpods-pro-2", brand: "Apple", price: 64900, compareAtPrice: null, stockQuantity: 30, images: [{ url: "/placeholder.png", altText: "AirPods Pro 2" }], categorySlug: "earphones" },
-  { id: "8", name: "65W GaN Charger", slug: "65w-gan-charger", brand: "Anker", price: 12900, compareAtPrice: 14900, stockQuantity: 45, images: [{ url: "/placeholder.png", altText: "Anker 65W GaN" }], categorySlug: "chargers" },
-];
+import { ProductCard } from "@/components/storefront/product-card";
+import { useApi } from "@/hooks/use-api";
+import { type ProductListResponse, toProductCardData } from "@/types/api";
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                              */
@@ -35,17 +24,19 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
   const [query, setQuery] = useState(initialQuery);
+  const [debounced, setDebounced] = useState(initialQuery);
 
-  const results = useMemo(() => {
-    if (!query.trim()) return allProducts;
-    const q = query.toLowerCase();
-    return allProducts.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.brand && p.brand.toLowerCase().includes(q)) ||
-        p.categorySlug.toLowerCase().includes(q),
-    );
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query), 300);
+    return () => clearTimeout(t);
   }, [query]);
+
+  const url =
+    debounced.trim().length > 0
+      ? `/api/products?search=${encodeURIComponent(debounced.trim())}&limit=1000`
+      : "/api/products?limit=1000";
+  const { data, loading } = useApi<ProductListResponse>(url);
+  const results = (data?.products ?? []).map(toProductCardData);
 
   return (
     <div className="px-[40px] max-md:px-gutter-mobile">
@@ -83,7 +74,11 @@ function SearchContent() {
           ))}
         </div>
 
-        {results.length === 0 && (
+        {loading && (
+          <p className="text-[15px] text-muted py-10 text-center">Searching...</p>
+        )}
+
+        {!loading && results.length === 0 && (
           <p className="text-[15px] text-muted py-10 text-center">
             No products found. Try a different search term.
           </p>

@@ -1,42 +1,67 @@
 "use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { StatusMarker } from "@/components/ui/status-marker";
-import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
 
-const order = {
-  id: "1",
-  orderNumber: "CC-00012",
-  status: "DELIVERED",
-  subtotal: 519700,
-  shippingCost: 50000,
-  totalAmount: 569700,
-  createdAt: "2024-12-15T10:30:00Z",
-  addressSnapshot: {
-    recipientName: "Nimali Fernando",
-    phone: "+94779876543",
-    line1: "42 Galle Road",
-    city: "Colombo",
-    province: "Western",
-    postalCode: "10350",
-  },
-  items: [
-    { id: "1", productName: "Galaxy S25 Ultra", productSku: "SM-S938B-256", unitPrice: 389900, quantity: 1, totalPrice: 389900 },
-    { id: "2", productName: "Sony WH-1000XM5", productSku: "SONY-WH1000XM5", unitPrice: 89900, quantity: 1, totalPrice: 89900 },
-    { id: "3", productName: "Anker USB-C Cable 2m", productSku: "USBC-2M", unitPrice: 2900, quantity: 1, totalPrice: 2900 },
-  ],
-  payment: { method: "STRIPE", status: "COMPLETED", paidAt: "2024-12-15T10:32:00Z" },
-};
+interface OrderItem {
+  id: string;
+  productName: string;
+  productSku: string;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+}
 
-const statusTimeline = [
-  { status: "CONFIRMED", date: "2024-12-15T10:32:00Z" },
-  { status: "PROCESSING", date: "2024-12-15T14:00:00Z" },
-  { status: "SHIPPED", date: "2024-12-16T09:00:00Z" },
-  { status: "DELIVERED", date: "2024-12-18T14:30:00Z" },
-];
+interface AddressSnapshot {
+  recipientName: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  province: string;
+  postalCode: string;
+}
+
+interface OrderDetail {
+  id: string;
+  orderNumber: string;
+  status: string;
+  subtotal: number;
+  shippingCost: number;
+  totalAmount: number;
+  createdAt: string;
+  addressSnapshot: AddressSnapshot;
+  items: OrderItem[];
+  payment: { method: string; status: string; paidAt: string | null } | null;
+}
 
 export default function OrderDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const { data: order, loading, error } = useApi<OrderDetail>(
+    id ? `/api/orders/${id}` : null,
+  );
+
+  if (loading) {
+    return <div className="px-[40px] py-16 text-[15px] text-muted max-md:px-gutter-mobile">Loading order...</div>;
+  }
+
+  if (error || !order) {
+    return (
+      <div className="px-[40px] py-16 max-md:px-gutter-mobile">
+        <h1 className="text-[32px] mb-3">Order not found</h1>
+        <p className="text-[15px] text-muted">
+          <Link href="/orders" className="text-ink font-semibold hover:underline">Back to orders</Link>
+        </p>
+      </div>
+    );
+  }
+
+  const addr = order.addressSnapshot;
+
   return (
     <div className="px-[40px] max-md:px-gutter-mobile">
       <nav className="py-3 text-[13px] text-muted">
@@ -74,20 +99,17 @@ export default function OrderDetailPage() {
 
           <h2 className="text-[20px] mt-10 mb-4">Timeline</h2>
           <div className="flex flex-col gap-0">
-            {statusTimeline.map((step, i) => (
-              <div key={step.status} className="flex items-start gap-4 pb-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-[10px] h-[10px] bg-accent shrink-0 mt-[4px]" />
-                  {i < statusTimeline.length - 1 && <div className="w-[2px] h-[32px] bg-divider" />}
-                </div>
-                <div>
-                  <span className="block text-[14px] font-[800] capitalize">
-                    {step.status.toLowerCase().replace("_", " ")}
-                  </span>
-                  <span className="block text-[12px] text-muted">{formatDate(step.date)}</span>
-                </div>
+            <div className="flex items-start gap-4 pb-4">
+              <div className="flex flex-col items-center">
+                <div className="w-[10px] h-[10px] bg-accent shrink-0 mt-[4px]" />
               </div>
-            ))}
+              <div>
+                <span className="block text-[14px] font-[800] capitalize">
+                  {order.status.toLowerCase().replace("_", " ")}
+                </span>
+                <span className="block text-[12px] text-muted">{formatDate(order.createdAt)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -106,21 +128,25 @@ export default function OrderDetailPage() {
             <span className="font-[800] tnum">{formatCurrency(order.totalAmount)}</span>
           </div>
 
-          <h3 className="text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-2">
-            Payment
-          </h3>
-          <p className="text-[14px] mb-1">{order.payment.method.replace("_", " ")}</p>
-          <p className="text-[12px] text-muted mb-6">{order.payment.status}</p>
+          {order.payment && (
+            <>
+              <h3 className="text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-2">
+                Payment
+              </h3>
+              <p className="text-[14px] mb-1">{order.payment.method.replace("_", " ")}</p>
+              <p className="text-[12px] text-muted mb-6">{order.payment.status}</p>
+            </>
+          )}
 
           <h3 className="text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-2">
             Delivery address
           </h3>
-          <p className="text-[14px]">{order.addressSnapshot.recipientName}</p>
-          <p className="text-[13px] text-muted">{order.addressSnapshot.line1}</p>
+          <p className="text-[14px]">{addr.recipientName}</p>
+          <p className="text-[13px] text-muted">{addr.line1}</p>
           <p className="text-[13px] text-muted">
-            {order.addressSnapshot.city}, {order.addressSnapshot.province} {order.addressSnapshot.postalCode}
+            {addr.city}, {addr.province} {addr.postalCode}
           </p>
-          <p className="text-[13px] text-muted">{order.addressSnapshot.phone}</p>
+          <p className="text-[13px] text-muted">{addr.phone}</p>
         </div>
       </div>
     </div>

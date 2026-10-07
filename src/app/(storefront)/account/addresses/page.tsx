@@ -6,54 +6,19 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tag } from "@/components/ui/tag";
+import { useApi } from "@/hooks/use-api";
 
 interface Address {
   id: string;
   recipientName: string;
   phone: string;
   line1: string;
-  line2: string;
+  line2: string | null;
   city: string;
   province: string;
   postalCode: string;
   isDefault: boolean;
 }
-
-const initialAddresses: Address[] = [
-  {
-    id: "1",
-    recipientName: "Kasun Perera",
-    phone: "+94 77 123 4567",
-    line1: "42 Galle Road",
-    line2: "Apt 3B",
-    city: "Colombo 03",
-    province: "Western",
-    postalCode: "00300",
-    isDefault: true,
-  },
-  {
-    id: "2",
-    recipientName: "Kasun Perera",
-    phone: "+94 77 123 4567",
-    line1: "15 Kandy Road",
-    line2: "",
-    city: "Kadawatha",
-    province: "Western",
-    postalCode: "11850",
-    isDefault: false,
-  },
-  {
-    id: "3",
-    recipientName: "Nimal Silva",
-    phone: "+94 71 987 6543",
-    line1: "8 Temple Street",
-    line2: "2nd Floor",
-    city: "Kandy",
-    province: "Central",
-    postalCode: "20000",
-    isDefault: false,
-  },
-];
 
 const emptyForm = {
   recipientName: "",
@@ -66,27 +31,44 @@ const emptyForm = {
 };
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
+  const { data, loading, error, refetch } = useApi<Address[]>("/api/addresses");
+  const addresses = data ?? [];
+
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newAddress: Address = {
-      id: String(Date.now()),
-      ...form,
-      isDefault: addresses.length === 0,
-    };
-    setAddresses((prev) => [...prev, newAddress]);
-    setForm(emptyForm);
-    setShowForm(false);
+    setSaving(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, isDefault: addresses.length === 0 }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Could not save address.");
+      }
+      setForm(emptyForm);
+      setShowForm(false);
+      refetch();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Could not save address.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id));
+  const handleDelete = async (id: string) => {
+    const res = await fetch(`/api/addresses/${id}`, { method: "DELETE" });
+    if (res.ok) refetch();
   };
 
   return (
@@ -102,7 +84,13 @@ export default function AddressesPage() {
       <div className="flex items-baseline justify-between mb-8">
         <div>
           <h1 className="text-[56px] max-md:text-[36px] mb-2">Addresses</h1>
-          <p className="text-[15px] text-muted">{addresses.length} saved addresses</p>
+          <p className="text-[15px] text-muted">
+            {loading
+              ? "Loading..."
+              : error
+                ? "Sign in to manage your addresses"
+                : `${addresses.length} saved address${addresses.length === 1 ? "" : "es"}`}
+          </p>
         </div>
         <Button
           variant="primary"
@@ -238,9 +226,14 @@ export default function AddressesPage() {
                 />
               </div>
             </div>
+            {formError && (
+              <p className="text-[13px]" style={{ color: "var(--mui-palette-error-main, #dc2626)" }}>
+                {formError}
+              </p>
+            )}
             <div className="pt-2">
-              <Button size="lg" type="submit">
-                Save address
+              <Button size="lg" type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save address"}
               </Button>
             </div>
           </form>

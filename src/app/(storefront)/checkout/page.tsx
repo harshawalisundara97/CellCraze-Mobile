@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -16,14 +17,15 @@ import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import Divider from "@mui/material/Divider";
+import Alert from "@mui/material/Alert";
 import { formatCurrency } from "@/lib/utils";
-
-const cartItems = [
-  { id: "1", name: "Galaxy S25 Ultra", brand: "Samsung", price: 389900, quantity: 1 },
-  { id: "3", name: "Sony WH-1000XM5", brand: "Sony", price: 89900, quantity: 2 },
-];
+import { useCartStore } from "@/stores/cart.store";
 
 export default function CheckoutPage() {
+  const router = useRouter();
+  const cartItems = useCartStore((s) => s.items);
+  const clearCart = useCartStore((s) => s.clearCart);
+
   const [paymentMethod, setPaymentMethod] = useState<"STRIPE" | "COD" | "BANK_TRANSFER">("STRIPE");
   const [address, setAddress] = useState({
     recipientName: "",
@@ -34,6 +36,8 @@ export default function CheckoutPage() {
     province: "",
     postalCode: "",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
   const shipping = subtotal >= 1000000 ? 0 : 50000;
@@ -41,6 +45,74 @@ export default function CheckoutPage() {
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setAddress((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const requiredFilled =
+    address.recipientName &&
+    address.phone &&
+    address.line1 &&
+    address.city &&
+    address.province &&
+    address.postalCode;
+
+  const handlePlaceOrder = async () => {
+    setError(null);
+
+    if (cartItems.length === 0) {
+      setError("Your cart is empty.");
+      return;
+    }
+    if (!requiredFilled) {
+      setError("Please fill in all required delivery fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // 1. Save the delivery address
+      const addrRes = await fetch("/api/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...address, isDefault: true }),
+      });
+      if (addrRes.status === 401) {
+        router.push("/login?redirect=/checkout");
+        return;
+      }
+      if (!addrRes.ok) {
+        const body = await addrRes.json().catch(() => ({}));
+        throw new Error(body.error ?? "Could not save address.");
+      }
+      const savedAddress = await addrRes.json();
+
+      // 2. Sync the client cart to the server cart
+      for (const item of cartItems) {
+        await fetch("/api/cart/items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: item.productId, quantity: item.quantity }),
+        });
+      }
+
+      // 3. Create the order
+      const orderRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ addressId: savedAddress.id, paymentMethod }),
+      });
+      if (!orderRes.ok) {
+        const body = await orderRes.json().catch(() => ({}));
+        throw new Error(body.error ?? "Could not place order.");
+      }
+      const order = await orderRes.json();
+
+      clearCart();
+      router.push(`/orders/${order.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Box className="px-[40px] max-md:px-4">
@@ -127,8 +199,14 @@ export default function CheckoutPage() {
         {/* Order summary */}
         <Box className="pl-10 pb-10 max-md:pl-0 max-md:pt-6">
           <Typography variant="h5" sx={{ fontSize: "20px", mb: 3 }}>Order summary</Typography>
+          {cartItems.length === 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "14px", mb: 1.5 }}>
+              Your cart is empty.{" "}
+              <Link href="/products" style={{ color: "inherit", fontWeight: 700 }}>Browse products</Link>
+            </Typography>
+          )}
           {cartItems.map((item) => (
-            <Box key={item.id} className="flex justify-between" sx={{ mb: 1.5 }}>
+            <Box key={item.productId} className="flex justify-between" sx={{ mb: 1.5 }}>
               <Typography sx={{ fontSize: "14px" }}>
                 {item.name} <Typography component="span" color="text.secondary" sx={{ fontSize: "14px" }}>x{item.quantity}</Typography>
               </Typography>
@@ -151,8 +229,20 @@ export default function CheckoutPage() {
             <Typography sx={{ fontWeight: 800, fontSize: "18px" }}>Total</Typography>
             <Typography sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums", fontSize: "18px" }}>{formatCurrency(total)}</Typography>
           </Box>
-          <Button variant="contained" size="large" fullWidth sx={{ mt: 3 }}>
-            Place order
+          {error && (
+            <Alert severity="error" sx={{ mt: 3 }}>
+              {error}
+            </Alert>
+          )}
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            sx={{ mt: error ? 2 : 3 }}
+            onClick={handlePlaceOrder}
+            disabled={submitting || cartItems.length === 0}
+          >
+            {submitting ? "Placing order..." : "Place order"}
           </Button>
         </Box>
       </Box>

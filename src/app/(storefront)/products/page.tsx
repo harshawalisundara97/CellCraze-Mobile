@@ -13,36 +13,12 @@ import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { ProductCard, type ProductCardData } from "@/components/storefront/product-card";
-
-/* ------------------------------------------------------------------ */
-/*  Mock data                                                         */
-/* ------------------------------------------------------------------ */
-
-const allProducts: ProductCardData[] = [
-  { id: "1", name: "Galaxy S25 Ultra", slug: "galaxy-s25-ultra", brand: "Samsung", price: 499900, compareAtPrice: 549900, stockQuantity: 12, images: [{ url: "/placeholder.png", altText: "Galaxy S25 Ultra" }], categorySlug: "phones" },
-  { id: "2", name: "iPhone 16 Pro", slug: "iphone-16-pro", brand: "Apple", price: 524900, compareAtPrice: null, stockQuantity: 8, images: [{ url: "/placeholder.png", altText: "iPhone 16 Pro" }], categorySlug: "phones" },
-  { id: "3", name: "WH-1000XM5", slug: "sony-wh-1000xm5", brand: "Sony", price: 89900, compareAtPrice: 109900, stockQuantity: 22, images: [{ url: "/placeholder.png", altText: "Sony WH-1000XM5" }], categorySlug: "headphones" },
-  { id: "4", name: "Galaxy Watch 7", slug: "galaxy-watch-7", brand: "Samsung", price: 74900, compareAtPrice: null, stockQuantity: 5, images: [{ url: "/placeholder.png", altText: "Galaxy Watch 7" }], categorySlug: "smartwatches" },
-  { id: "5", name: "Pixel 9 Pro", slug: "pixel-9-pro", brand: "Google", price: 389900, compareAtPrice: 419900, stockQuantity: 0, images: [{ url: "/placeholder.png", altText: "Pixel 9 Pro" }], categorySlug: "phones" },
-  { id: "6", name: "AirPods Pro 2", slug: "airpods-pro-2", brand: "Apple", price: 64900, compareAtPrice: null, stockQuantity: 30, images: [{ url: "/placeholder.png", altText: "AirPods Pro 2" }], categorySlug: "earphones" },
-  { id: "7", name: "Galaxy Buds3 Pro", slug: "galaxy-buds3-pro", brand: "Samsung", price: 49900, compareAtPrice: 54900, stockQuantity: 18, images: [{ url: "/placeholder.png", altText: "Galaxy Buds3 Pro" }], categorySlug: "earphones" },
-  { id: "8", name: "65W GaN Charger", slug: "65w-gan-charger", brand: "Anker", price: 12900, compareAtPrice: 14900, stockQuantity: 45, images: [{ url: "/placeholder.png", altText: "Anker 65W GaN" }], categorySlug: "chargers" },
-  { id: "9", name: "Galaxy S25+", slug: "galaxy-s25-plus", brand: "Samsung", price: 424900, compareAtPrice: null, stockQuantity: 15, images: [{ url: "/placeholder.png", altText: "Galaxy S25+" }], categorySlug: "phones" },
-  { id: "10", name: "iPhone 16e", slug: "iphone-16e", brand: "Apple", price: 199900, compareAtPrice: null, stockQuantity: 20, images: [{ url: "/placeholder.png", altText: "iPhone 16e" }], categorySlug: "phones" },
-  { id: "11", name: "Xiaomi 14T Pro", slug: "xiaomi-14t-pro", brand: "Xiaomi", price: 189900, compareAtPrice: 209900, stockQuantity: 10, images: [{ url: "/placeholder.png", altText: "Xiaomi 14T Pro" }], categorySlug: "phones" },
-  { id: "12", name: "Galaxy Fit3", slug: "galaxy-fit3", brand: "Samsung", price: 14900, compareAtPrice: null, stockQuantity: 35, images: [{ url: "/placeholder.png", altText: "Galaxy Fit3" }], categorySlug: "smartwatches" },
-];
-
-const categoryTree = [
-  { slug: "phones", label: "Phones", count: 6 },
-  { slug: "headphones", label: "Headphones", count: 1 },
-  { slug: "earphones", label: "Earphones", count: 2 },
-  { slug: "chargers", label: "Chargers", count: 1 },
-  { slug: "smartwatches", label: "Smartwatches", count: 2 },
-  { slug: "accessories", label: "Accessories", count: 0 },
-];
-
-const brands = ["Samsung", "Apple", "Sony", "Google", "Anker", "Xiaomi"];
+import { useApi } from "@/hooks/use-api";
+import {
+  type ApiCategory,
+  type ProductListResponse,
+  toProductCardData,
+} from "@/types/api";
 
 const sortOptions = [
   { label: "Newest", value: "newest" },
@@ -65,6 +41,38 @@ export default function ProductsPage() {
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  const { data: productData, loading } = useApi<ProductListResponse>(
+    "/api/products?limit=1000",
+  );
+  const { data: categoryData } = useApi<ApiCategory[]>("/api/categories");
+
+  const allProducts: ProductCardData[] = useMemo(
+    () => (productData?.products ?? []).map(toProductCardData),
+    [productData],
+  );
+
+  const categoryTree = useMemo(
+    () =>
+      (categoryData ?? []).map((cat) => ({
+        slug: cat.slug,
+        label: cat.name,
+        count: cat._count?.products ?? 0,
+      })),
+    [categoryData],
+  );
+
+  const brands = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          allProducts
+            .map((p) => p.brand)
+            .filter((b): b is string => Boolean(b)),
+        ),
+      ).sort(),
+    [allProducts],
+  );
 
   const [sort, setSort] = useState(searchParams.get("sort") ?? "newest");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
@@ -98,7 +106,7 @@ function ProductsContent() {
     else if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
 
     return list;
-  }, [selectedCategory, selectedBrands, priceMin, priceMax, inStockOnly, sort]);
+  }, [allProducts, selectedCategory, selectedBrands, priceMin, priceMax, inStockOnly, sort]);
 
   const activeFilters: { label: string; clear: () => void }[] = [];
   if (selectedCategory)
@@ -275,11 +283,21 @@ function ProductsContent() {
           )}
 
           {/* Product grid */}
-          <div className="ruled-grid grid-cols-3 max-md:grid-cols-2">
-            {filtered.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
+          {loading ? (
+            <Typography color="text.secondary" className="px-5 py-10">
+              Loading products...
+            </Typography>
+          ) : filtered.length === 0 ? (
+            <Typography color="text.secondary" className="px-5 py-10">
+              No products match your filters.
+            </Typography>
+          ) : (
+            <div className="ruled-grid grid-cols-3 max-md:grid-cols-2">
+              {filtered.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
           <Box className="flex items-center justify-between py-6 px-5" sx={{ borderTop: 2, borderColor: "divider" }}>

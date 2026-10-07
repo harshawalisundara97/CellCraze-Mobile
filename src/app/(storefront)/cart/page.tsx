@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -18,36 +17,19 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { formatCurrency } from "@/lib/utils";
-
-interface CartLineItem {
-  id: string;
-  name: string;
-  brand: string;
-  price: number;
-  quantity: number;
-  stockQuantity: number;
-}
-
-const initialItems: CartLineItem[] = [
-  { id: "1", name: "Galaxy S25 Ultra", brand: "Samsung", price: 389900, quantity: 1, stockQuantity: 12 },
-  { id: "3", name: "Sony WH-1000XM5", brand: "Sony", price: 89900, quantity: 2, stockQuantity: 18 },
-];
+import { useCartStore } from "@/stores/cart.store";
 
 export default function CartPage() {
-  const [items, setItems] = useState(initialItems);
+  const items = useCartStore((s) => s.items);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const removeItem = useCartStore((s) => s.removeItem);
 
-  const updateQty = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, Math.min(item.stockQuantity, item.quantity + delta)) }
-          : item
-      )
-    );
+  const updateQty = (productId: string, quantity: number, delta: number) => {
+    updateQuantity(productId, quantity + delta);
   };
 
-  const remove = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  const remove = (productId: string) => {
+    removeItem(productId);
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -93,14 +75,11 @@ export default function CartPage() {
               </TableHead>
               <TableBody>
                 {items.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.productId}>
                     <TableCell>
                       <Box className="flex items-center gap-4">
                         <Box sx={{ width: 64, height: 64, bgcolor: "background.paper", filter: "grayscale(1)", flexShrink: 0 }} />
                         <Box>
-                          <Typography variant="subtitle2" color="text.secondary">
-                            {item.brand}
-                          </Typography>
                           <Typography sx={{ fontWeight: 800, fontSize: "15px" }}>{item.name}</Typography>
                           <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums", fontSize: "14px", mt: 0.5 }}>
                             {formatCurrency(item.price)}
@@ -110,7 +89,7 @@ export default function CartPage() {
                     </TableCell>
                     <TableCell align="center">
                       <Box className="flex items-center justify-center gap-1">
-                        <IconButton size="small" onClick={() => updateQty(item.id, -1)}>
+                        <IconButton size="small" onClick={() => updateQty(item.productId, item.quantity, -1)}>
                           <RemoveIcon fontSize="small" />
                         </IconButton>
                         <TextField
@@ -119,7 +98,7 @@ export default function CartPage() {
                           slotProps={{ htmlInput: { readOnly: true, style: { textAlign: "center", width: 32, fontWeight: 800, fontVariantNumeric: "tabular-nums" } } }}
                           sx={{ "& .MuiOutlinedInput-root": { px: 0 } }}
                         />
-                        <IconButton size="small" onClick={() => updateQty(item.id, 1)}>
+                        <IconButton size="small" onClick={() => updateQty(item.productId, item.quantity, 1)}>
                           <AddIcon fontSize="small" />
                         </IconButton>
                       </Box>
@@ -130,7 +109,7 @@ export default function CartPage() {
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton size="small" onClick={() => remove(item.id)} sx={{ color: "text.disabled", "&:hover": { color: "primary.main" } }}>
+                      <IconButton size="small" onClick={() => remove(item.productId)} sx={{ color: "text.disabled", "&:hover": { color: "primary.main" } }}>
                         <DeleteOutlinedIcon fontSize="small" />
                       </IconButton>
                     </TableCell>

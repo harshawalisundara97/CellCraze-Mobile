@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
 
     const pagination = {
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
+      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : undefined,
       sort: (searchParams.get("sort") as any) || "featured",
     };
 
