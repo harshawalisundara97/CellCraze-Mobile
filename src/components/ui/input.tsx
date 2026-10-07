@@ -1,51 +1,42 @@
 "use client";
 
 import * as React from "react";
-import { Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "size" | "color" | "translate"
+  > {
   variant?: "default" | "search";
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, variant = "default", ...props }, ref) => {
-    if (variant === "search") {
-      return (
-        <div className="relative">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-[10px] top-1/2 -translate-y-1/2 text-neutral-500"
-          />
-          <input
-            ref={ref}
-            className={cn(
-              "min-h-[36px] w-full rounded-none border border-divider bg-surface",
-              "pl-[34px] pr-[10px] py-[6px] text-[14px] text-ink",
-              "font-sans placeholder:text-neutral-500",
-              "transition-colors duration-100",
-              "hover:border-ink/[0.45] focus:border-accent focus:outline-none",
-              className,
-            )}
-            {...props}
-          />
-        </div>
-      );
-    }
-
+  ({ className, variant = "default", placeholder, disabled, ...props }, ref) => {
     return (
-      <input
-        ref={ref}
-        className={cn(
-          "min-h-[36px] w-full rounded-none border border-divider bg-surface",
-          "px-[10px] py-[6px] text-[14px] text-ink",
-          "font-sans placeholder:text-neutral-500",
-          "transition-colors duration-100",
-          "hover:border-ink/[0.45] focus:border-accent focus:outline-none",
-          className,
-        )}
-        {...props}
+      <TextField
+        inputRef={ref}
+        className={className}
+        variant="outlined"
+        size="small"
+        fullWidth
+        placeholder={placeholder}
+        disabled={disabled}
+        slotProps={{
+          input: {
+            startAdornment:
+              variant === "search" ? (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ) : undefined,
+          },
+          htmlInput: {
+            ...props,
+          },
+        }}
       />
     );
   },

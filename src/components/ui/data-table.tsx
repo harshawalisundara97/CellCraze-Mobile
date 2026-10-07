@@ -1,6 +1,14 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import * as React from "react";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
 
 export interface Column<T> {
   key: string;
@@ -27,60 +35,49 @@ export function DataTable<T extends Record<string, unknown>>({
   emptyMessage = "No data",
 }: DataTableProps<T>) {
   return (
-    <div className={cn("w-full overflow-x-auto", className)}>
-      <table className="w-full border-collapse text-[14px]">
-        <thead>
-          <tr>
+    <TableContainer component={Paper} className={className} elevation={0}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
             {columns.map((col) => (
-              <th
-                key={col.key}
-                className={cn(
-                  "border-b-2 border-divider px-[8px] py-[8px] text-left",
-                  "text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/60",
-                  col.className,
-                )}
-              >
+              <TableCell key={col.key} className={col.className}>
                 {col.header}
-              </th>
+              </TableCell>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {data.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-[8px] py-[24px] text-center text-neutral-500"
-              >
-                {emptyMessage}
-              </td>
-            </tr>
+            <TableRow>
+              <TableCell colSpan={columns.length} align="center">
+                <Typography
+                  variant="body2"
+                  sx={{ py: 2 }}
+                >
+                  {emptyMessage}
+                </Typography>
+              </TableCell>
+            </TableRow>
           ) : (
             data.map((row, idx) => (
-              <tr
+              <TableRow
                 key={keyExtractor(row, idx)}
+                hover
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={cn(
-                  "border-b border-divider transition-colors duration-75",
-                  onRowClick && "cursor-pointer",
-                  "hover:bg-ink/[0.04]",
-                )}
+                sx={onRowClick ? { cursor: "pointer" } : undefined}
               >
                 {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className={cn("px-[8px] py-[8px]", col.className)}
-                  >
+                  <TableCell key={col.key} className={col.className}>
                     {col.render
                       ? col.render(row, idx)
                       : (row[col.key] as React.ReactNode)}
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

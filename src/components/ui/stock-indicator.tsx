@@ -1,4 +1,9 @@
-import { cn } from "@/lib/utils";
+"use client";
+
+import * as React from "react";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import CircleIcon from "@mui/icons-material/Circle";
 
 export interface StockIndicatorProps {
   quantity: number;
@@ -7,23 +12,33 @@ export interface StockIndicatorProps {
 
 export function StockIndicator({ quantity, className }: StockIndicatorProps) {
   let label: string;
-  let colorClass: string;
+  let color: string;
 
   if (quantity === 0) {
     label = "Out of stock";
-    colorClass = "bg-neutral-400";
+    color = "text.disabled";
   } else if (quantity <= 5) {
     label = `Only ${quantity} left`;
-    colorClass = "bg-accent";
+    color = "primary.main";
   } else {
     label = "In stock";
-    colorClass = "bg-ink";
+    color = "text.primary";
   }
 
   return (
-    <span className={cn("inline-flex items-center gap-[6px]", className)}>
-      <span className={cn("block h-[8px] w-[8px] rounded-none", colorClass)} />
-      <span className="text-[12px] font-semibold leading-none">{label}</span>
-    </span>
+    <Box
+      component="span"
+      className={className}
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}
+    >
+      <CircleIcon sx={{ fontSize: 8, color }} />
+      <Typography
+        variant="body2"
+        component="span"
+        sx={{ fontSize: "0.75rem", fontWeight: 600, lineHeight: 1 }}
+      >
+        {label}
+      </Typography>
+    </Box>
   );
 }

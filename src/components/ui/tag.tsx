@@ -1,7 +1,12 @@
-import { cn } from "@/lib/utils";
+"use client";
 
-export interface TagProps extends React.HTMLAttributes<HTMLSpanElement> {
+import * as React from "react";
+import Chip from "@mui/material/Chip";
+
+export interface TagProps {
   variant?: "accent" | "neutral" | "outline";
+  className?: string;
+  children?: React.ReactNode;
 }
 
 export function Tag({
@@ -10,20 +15,17 @@ export function Tag({
   children,
   ...props
 }: TagProps) {
+  const muiVariant = variant === "outline" ? "outlined" : "filled";
+  const muiColor = variant === "accent" ? "primary" : "default";
+
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-none px-[10px] py-[3px] text-[11px] font-semibold leading-none",
-
-        variant === "accent" && "bg-accent-100 text-accent-800",
-        variant === "neutral" && "bg-neutral-100 text-neutral-800",
-        variant === "outline" && "border border-accent text-accent bg-transparent",
-
-        className,
-      )}
+    <Chip
+      label={children}
+      variant={muiVariant}
+      color={muiColor}
+      size="small"
+      className={className}
       {...props}
-    >
-      {children}
-    </span>
+    />
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import * as React from "react";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import ToggleButton from "@mui/material/ToggleButton";
 
 export interface SegmentedControlOption {
   label: string;
@@ -19,44 +21,30 @@ export function SegmentedControl({
   options,
   value,
   onChange,
-  name = "segmented",
   className,
 }: SegmentedControlProps) {
+  const handleChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newValue: string | null,
+  ) => {
+    if (newValue !== null) {
+      onChange(newValue);
+    }
+  };
+
   return (
-    <div
-      className={cn(
-        "inline-flex rounded-none border border-divider",
-        className,
-      )}
-      role="radiogroup"
+    <ToggleButtonGroup
+      value={value}
+      exclusive
+      onChange={handleChange}
+      className={className}
+      size="small"
     >
-      {options.map((option) => {
-        const isSelected = option.value === value;
-        return (
-          <label
-            key={option.value}
-            className={cn(
-              "relative cursor-pointer select-none px-[12px] py-[7px] text-[13px] font-semibold leading-none",
-              "transition-colors duration-100",
-              isSelected
-                ? "bg-accent text-bg"
-                : "bg-transparent text-ink hover:bg-ink/[0.05]",
-              // divider between options
-              "border-r border-divider last:border-r-0",
-            )}
-          >
-            <input
-              type="radio"
-              name={name}
-              value={option.value}
-              checked={isSelected}
-              onChange={() => onChange(option.value)}
-              className="absolute inset-0 cursor-pointer opacity-0"
-            />
-            {option.label}
-          </label>
-        );
-      })}
-    </div>
+      {options.map((option) => (
+        <ToggleButton key={option.value} value={option.value}>
+          {option.label}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
   );
 }

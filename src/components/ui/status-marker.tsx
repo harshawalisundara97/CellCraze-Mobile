@@ -1,35 +1,20 @@
-import { cn } from "@/lib/utils";
+"use client";
+
+import * as React from "react";
+import Chip from "@mui/material/Chip";
+import CircleIcon from "@mui/icons-material/Circle";
 import type { OrderStatus } from "@/types";
 
-const statusStyles: Record<
+const statusColorMap: Record<
   OrderStatus,
-  { fill: string; border: string; textClass?: string }
+  "warning" | "info" | "primary" | "secondary" | "success" | "error"
 > = {
-  PENDING: {
-    fill: "bg-transparent",
-    border: "border border-neutral-500",
-  },
-  CONFIRMED: {
-    fill: "bg-neutral-400",
-    border: "border border-neutral-400",
-  },
-  PROCESSING: {
-    fill: "bg-transparent",
-    border: "border border-accent",
-  },
-  SHIPPED: {
-    fill: "bg-accent",
-    border: "border border-accent",
-  },
-  DELIVERED: {
-    fill: "bg-ink",
-    border: "border border-ink",
-  },
-  CANCELLED: {
-    fill: "bg-transparent",
-    border: "border border-neutral-400",
-    textClass: "line-through text-neutral-500",
-  },
+  PENDING: "warning",
+  CONFIRMED: "info",
+  PROCESSING: "primary",
+  SHIPPED: "secondary",
+  DELIVERED: "success",
+  CANCELLED: "error",
 };
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -47,21 +32,21 @@ export interface StatusMarkerProps {
 }
 
 export function StatusMarker({ status, className }: StatusMarkerProps) {
-  const style = statusStyles[status];
+  const color = statusColorMap[status];
+
   return (
-    <span className={cn("inline-flex items-center gap-[6px]", className)}>
-      <span
-        className={cn(
-          "block h-[10px] w-[10px] rounded-none",
-          style.fill,
-          style.border,
-        )}
-      />
-      <span
-        className={cn("text-[13px] font-semibold leading-none", style.textClass)}
-      >
-        {statusLabels[status]}
-      </span>
-    </span>
+    <Chip
+      icon={<CircleIcon sx={{ fontSize: 10 }} />}
+      label={statusLabels[status]}
+      color={color}
+      variant="outlined"
+      size="small"
+      className={className}
+      sx={
+        status === "CANCELLED"
+          ? { textDecoration: "line-through" }
+          : undefined
+      }
+    />
   );
 }
