@@ -1,4 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import {
+  Container,
+  Typography,
+  Divider,
+  Box,
+  Link as MuiLink,
+} from "@mui/material";
+import Grid from "@mui/material/Grid";
 import { Logo } from "./logo";
 
 const shopLinks = [
@@ -31,52 +41,76 @@ function FooterColumn({
   links: { name: string; href: string }[];
 }) {
   return (
-    <div>
-      <h4 className="text-[11px] uppercase font-[600] tracking-[0.08em] text-muted mb-4">
+    <Box>
+      <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 2 }}>
         {heading}
-      </h4>
-      <ul className="flex flex-col gap-2">
+      </Typography>
+      <Box className="flex flex-col gap-2">
         {links.map((link) => (
-          <li key={link.name}>
-            <Link
-              href={link.href}
-              className="text-[14px] text-ink hover:text-accent transition-colors"
-            >
-              {link.name}
-            </Link>
-          </li>
+          <MuiLink
+            key={link.name}
+            component={Link}
+            href={link.href}
+            underline="none"
+            sx={{
+              fontSize: 14,
+              color: "text.primary",
+              "&:hover": { color: "primary.main" },
+              transition: "color 0.2s",
+            }}
+          >
+            {link.name}
+          </MuiLink>
         ))}
-      </ul>
-    </div>
+      </Box>
+    </Box>
   );
 }
 
 export function StorefrontFooter() {
   return (
-    <footer className="rule-top mt-auto">
-      <div className="grid grid-cols-1 md:grid-cols-[4fr_2fr_2fr_2fr] gap-10 px-4 md:px-[40px] py-12">
-        <div>
-          <Logo size="small" />
-          <p className="mt-4 text-[14px] text-muted max-w-[320px] leading-relaxed">
-            Sri Lanka&apos;s trusted destination for mobile phones and
-            accessories. Genuine products, official warranty, and fast island-wide
-            delivery.
-          </p>
-        </div>
+    <Box component="footer" sx={{ mt: "auto", borderTop: "2px solid", borderColor: "divider" }}>
+      <Container maxWidth={false} sx={{ px: { xs: 2, md: 5 }, py: 6 }}>
+        <Grid container spacing={5}>
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Logo size="small" />
+            <Typography
+              variant="body2"
+              sx={{ mt: 2, maxWidth: 320, lineHeight: 1.7, color: "text.secondary" }}
+            >
+              Sri Lanka&apos;s trusted destination for mobile phones and
+              accessories. Genuine products, official warranty, and fast
+              island-wide delivery.
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <FooterColumn heading="Shop" links={shopLinks} />
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <FooterColumn heading="Help" links={helpLinks} />
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <FooterColumn heading="Account" links={accountLinks} />
+          </Grid>
+        </Grid>
+      </Container>
 
-        <FooterColumn heading="Shop" links={shopLinks} />
-        <FooterColumn heading="Help" links={helpLinks} />
-        <FooterColumn heading="Account" links={accountLinks} />
-      </div>
+      <Divider />
 
-      <div className="rule-top flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-[40px] py-4 gap-2">
-        <span className="text-[12px] text-muted">
-          &copy; 2026 CellCraze. All rights reserved.
-        </span>
-        <span className="text-[12px] text-muted">
-          Visa &middot; Mastercard &middot; Cash on delivery &middot; Bank transfer
-        </span>
-      </div>
-    </footer>
+      <Container
+        maxWidth={false}
+        sx={{ px: { xs: 2, md: 5 }, py: 2 }}
+      >
+        <Box className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+          <Typography variant="body2" sx={{ fontSize: 12, color: "text.secondary" }}>
+            &copy; 2026 CellCraze. All rights reserved.
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: 12, color: "text.secondary" }}>
+            Visa &middot; Mastercard &middot; Cash on delivery &middot; Bank
+            transfer
+          </Typography>
+        </Box>
+      </Container>
+    </Box>
   );
 }

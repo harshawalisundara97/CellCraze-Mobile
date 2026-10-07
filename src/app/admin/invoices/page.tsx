@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { SegmentedControl } from "@/components/ui/segmented-control";
-import { Tag } from "@/components/ui/tag";
+import { Suspense, useState } from "react";
+import {
+  Box,
+  Typography,
+  Chip,
+  Tabs,
+  Tab,
+} from "@mui/material";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const statusOptions = [
@@ -20,49 +26,113 @@ const invoices = [
   { id: "4", invoiceNumber: "INV-2024-0009", orderNumber: "CC-00009", customer: "Priya Jayasuriya", status: "PAID", totalAmount: 449900, createdAt: "2024-12-05T14:00:00Z", paidAt: "2024-12-06T11:00:00Z" },
 ];
 
-const statusTag: Record<string, "accent" | "neutral" | "outline"> = {
-  DRAFT: "neutral",
-  SENT: "outline",
-  PAID: "accent",
-  OVERDUE: "accent",
-  CANCELLED: "neutral",
+const statusChipColor: Record<string, "success" | "info" | "error" | "default" | "warning"> = {
+  DRAFT: "default",
+  SENT: "info",
+  PAID: "success",
+  OVERDUE: "error",
+  CANCELLED: "warning",
 };
+
+const columns: GridColDef[] = [
+  {
+    field: "invoiceNumber",
+    headerName: "Invoice",
+    width: 160,
+    renderCell: (params) => (
+      <Typography variant="body2" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+        {params.value}
+      </Typography>
+    ),
+  },
+  {
+    field: "orderNumber",
+    headerName: "Order",
+    width: 120,
+    renderCell: (params) => (
+      <Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+        {params.value}
+      </Typography>
+    ),
+  },
+  { field: "customer", headerName: "Customer", flex: 1, minWidth: 160 },
+  {
+    field: "status",
+    headerName: "Status",
+    width: 120,
+    renderCell: (params) => (
+      <Chip
+        label={params.value.toLowerCase()}
+        color={statusChipColor[params.value] || "default"}
+        size="small"
+        sx={{ textTransform: "capitalize" }}
+      />
+    ),
+  },
+  {
+    field: "totalAmount",
+    headerName: "Amount",
+    width: 150,
+    align: "right",
+    headerAlign: "right",
+    renderCell: (params) => (
+      <Typography variant="body2" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+        {formatCurrency(params.value)}
+      </Typography>
+    ),
+  },
+  {
+    field: "createdAt",
+    headerName: "Date",
+    width: 200,
+    renderCell: (params) => (
+      <Typography variant="caption" color="text.secondary">
+        {formatDate(params.value)}
+      </Typography>
+    ),
+  },
+];
 
 export default function AdminInvoicesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const filtered = invoices.filter((inv) => statusFilter === "all" || inv.status === statusFilter);
 
   return (
-    <div>
-      <h1 className="text-[32px] mb-1">Invoices</h1>
-      <p className="text-[14px] text-muted mb-6">{invoices.length} invoices</p>
+    <Box>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+        Invoices
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {invoices.length} invoices
+      </Typography>
 
-      <div className="mb-6">
-        <SegmentedControl options={statusOptions} value={statusFilter} onChange={setStatusFilter} name="status" />
-      </div>
+      <Box sx={{ mb: 3 }}>
+        <Tabs
+          value={statusFilter}
+          onChange={(_, v) => setStatusFilter(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {statusOptions.map((opt) => (
+            <Tab key={opt.value} label={opt.label} value={opt.value} />
+          ))}
+        </Tabs>
+      </Box>
 
-      <div className="border-t-2 border-divider">
-        <div className="grid grid-cols-[140px_110px_1fr_100px_140px_120px] gap-4 py-3 text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 border-b-2 border-divider">
-          <span>Invoice</span>
-          <span>Order</span>
-          <span>Customer</span>
-          <span>Status</span>
-          <span className="text-right">Amount</span>
-          <span className="text-right">Date</span>
-        </div>
-        {filtered.map((inv) => (
-          <div key={inv.id} className="grid grid-cols-[140px_110px_1fr_100px_140px_120px] gap-4 items-center py-3 border-b border-divider text-[14px] hover:bg-ink/[0.02] cursor-pointer transition-colors">
-            <span className="font-[800] tnum">{inv.invoiceNumber}</span>
-            <span className="tnum text-muted">{inv.orderNumber}</span>
-            <span className="truncate">{inv.customer}</span>
-            <Tag variant={statusTag[inv.status] || "neutral"}>
-              {inv.status.toLowerCase()}
-            </Tag>
-            <span className="text-right font-[800] tnum">{formatCurrency(inv.totalAmount)}</span>
-            <span className="text-right text-[12px] text-muted">{formatDate(inv.createdAt)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
+      <Suspense fallback={<Box sx={{ height: 400 }} />}>
+        <DataGrid
+          rows={filtered}
+          columns={columns}
+          autoHeight
+          disableRowSelectionOnClick
+          pageSizeOptions={[10, 25]}
+          initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+          sx={{
+            border: 1,
+            borderColor: "divider",
+          }}
+        />
+      </Suspense>
+    </Box>
   );
 }

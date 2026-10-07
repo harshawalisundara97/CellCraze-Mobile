@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { SegmentedControl } from "@/components/ui/segmented-control";
-import { StockIndicator } from "@/components/ui/stock-indicator";
+import { Suspense, useState } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Chip,
+  Card,
+  CardContent,
+  InputAdornment,
+  Tabs,
+  Tab,
+} from "@mui/material";
+import { Search, Inventory2, WarningAmber, ErrorOutlined } from "@mui/icons-material";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { formatCurrency } from "@/lib/utils";
 
 const viewOptions = [
@@ -23,6 +33,51 @@ const inventory = [
   { id: "8", sku: "SPG-ULTRA", name: "Spigen Ultra Hybrid Case", category: "Accessories", stockQuantity: 50, reorderPoint: 20, costPrice: 2000, value: 100000 },
 ];
 
+const totalValue = inventory.reduce((s, i) => s + i.value, 0);
+const totalItems = inventory.reduce((s, i) => s + i.stockQuantity, 0);
+const lowStockCount = inventory.filter((i) => i.stockQuantity > 0 && i.stockQuantity <= i.reorderPoint).length;
+const outOfStockCount = inventory.filter((i) => i.stockQuantity === 0).length;
+
+const columns: GridColDef[] = [
+  { field: "sku", headerName: "SKU", width: 140 },
+  { field: "name", headerName: "Product", flex: 1, minWidth: 180 },
+  { field: "category", headerName: "Category", width: 120 },
+  {
+    field: "stockQuantity",
+    headerName: "Stock",
+    width: 110,
+    align: "center",
+    headerAlign: "center",
+    renderCell: (params) => (
+      <Chip
+        label={params.value}
+        size="small"
+        color={params.value === 0 ? "error" : params.value <= params.row.reorderPoint ? "warning" : "success"}
+        sx={{ fontWeight: 700, minWidth: 40 }}
+      />
+    ),
+  },
+  {
+    field: "reorderPoint",
+    headerName: "Reorder Pt",
+    width: 100,
+    align: "center",
+    headerAlign: "center",
+  },
+  {
+    field: "value",
+    headerName: "Value",
+    width: 140,
+    align: "right",
+    headerAlign: "right",
+    renderCell: (params) => (
+      <Typography variant="body2" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+        {formatCurrency(params.value)}
+      </Typography>
+    ),
+  },
+];
+
 export default function AdminInventoryPage() {
   const [view, setView] = useState("all");
   const [search, setSearch] = useState("");
@@ -34,49 +89,99 @@ export default function AdminInventoryPage() {
     return true;
   });
 
-  const totalValue = inventory.reduce((s, i) => s + i.value, 0);
-
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-[32px]">Inventory</h1>
-        <div className="text-right">
-          <span className="block text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60">Total stock value</span>
-          <span className="block text-[24px] font-[800] tnum">{formatCurrency(totalValue)}</span>
-        </div>
-      </div>
-      <p className="text-[14px] text-muted mb-6">{inventory.length} products tracked</p>
+    <Box>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+        Inventory
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {inventory.length} products tracked
+      </Typography>
 
-      <div className="flex items-center justify-between mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
-        <SegmentedControl options={viewOptions} value={view} onChange={setView} name="view" />
-        <div className="w-[260px]">
-          <Input variant="search" placeholder="Search inventory..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
+      <div className="grid grid-cols-4 max-md:grid-cols-2 gap-3" style={{ marginBottom: 24 }}>
+        <Card variant="outlined">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Typography variant="overline" color="text.secondary">Total stock value</Typography>
+              <Inventory2 sx={{ fontSize: 20, color: "text.disabled" }} />
+            </div>
+            <Typography variant="h5" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+              {formatCurrency(totalValue)}
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="overline" color="text.secondary">Total units</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+              {totalItems}
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card variant="outlined">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Typography variant="overline" color="text.secondary">Low stock</Typography>
+              <WarningAmber sx={{ fontSize: 20, color: "warning.main" }} />
+            </div>
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              {lowStockCount}
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card variant="outlined">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Typography variant="overline" color="text.secondary">Out of stock</Typography>
+              <ErrorOutlined sx={{ fontSize: 20, color: "error.main" }} />
+            </div>
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              {outOfStockCount}
+            </Typography>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="border-t-2 border-divider">
-        <div className="grid grid-cols-[100px_1fr_100px_80px_80px_120px] gap-4 py-3 text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 border-b-2 border-divider">
-          <span>SKU</span>
-          <span>Product</span>
-          <span>Category</span>
-          <span className="text-center">Stock</span>
-          <span className="text-center">Reorder</span>
-          <span className="text-right">Value</span>
-        </div>
-        {filtered.map((item) => (
-          <div key={item.id} className="grid grid-cols-[100px_1fr_100px_80px_80px_120px] gap-4 items-center py-3 border-b border-divider text-[14px]">
-            <span className="tnum text-muted">{item.sku}</span>
-            <span className="font-[800] truncate">{item.name}</span>
-            <span className="text-muted">{item.category}</span>
-            <span className="flex items-center justify-center gap-2">
-              <StockIndicator quantity={item.stockQuantity} />
-              <span className="tnum">{item.stockQuantity}</span>
-            </span>
-            <span className="text-center tnum text-muted">{item.reorderPoint}</span>
-            <span className="text-right tnum font-semibold">{formatCurrency(item.value)}</span>
-          </div>
-        ))}
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4" style={{ marginBottom: 24 }}>
+        <Tabs value={view} onChange={(_, v) => setView(v)}>
+          {viewOptions.map((opt) => (
+            <Tab key={opt.value} label={opt.label} value={opt.value} />
+          ))}
+        </Tabs>
+        <Box sx={{ width: 260 }}>
+          <TextField
+            size="small"
+            fullWidth
+            placeholder="Search inventory..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        </Box>
       </div>
-    </div>
+
+      <Suspense fallback={<Box sx={{ height: 400 }} />}>
+        <DataGrid
+        rows={filtered}
+        columns={columns}
+        autoHeight
+        disableRowSelectionOnClick
+        pageSizeOptions={[10, 25]}
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        sx={{
+          border: 1,
+          borderColor: "divider",
+        }}
+      />
+      </Suspense>
+    </Box>
   );
 }

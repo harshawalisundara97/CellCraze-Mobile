@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
-import {
-  ArrowRight,
-  Truck,
-  CreditCard,
-  ShieldCheck,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { CategoryCard, type CategoryCardData } from "@/components/storefront/category-card";
 import { ProductCard, type ProductCardData } from "@/components/storefront/product-card";
 import { formatCurrency } from "@/lib/utils";
@@ -51,123 +55,139 @@ export default function HomePage() {
   return (
     <>
       {/* ---- Hero ---- */}
-      <section className="ruled-grid grid-cols-2 rule-bottom">
+      <Box component="section" className="grid grid-cols-2 max-md:grid-cols-1" sx={{ borderBottom: 2, borderColor: "divider" }}>
         {/* Left column */}
-        <div className="px-[80px] pt-10 pb-16 flex flex-col justify-center gap-6 max-md:px-gutter-mobile max-md:py-10">
-          <span className="text-[13px] uppercase tracking-[0.06em] text-accent-700 font-semibold">
+        <Box className="flex flex-col justify-center gap-6 px-[80px] pt-10 pb-16 max-md:px-4 max-md:py-10">
+          <Typography variant="subtitle2" color="primary">
             New this week — Galaxy S25 series
-          </span>
-          <h1 className="text-[76px] leading-[1.02] max-md:text-[40px]">
+          </Typography>
+          <Typography variant="h1" sx={{ fontSize: { xs: "40px", md: "76px" }, lineHeight: 1.02 }}>
             Phones, sound and power.{" "}
-            <span className="text-accent">In stock today.</span>
-          </h1>
-          <p className="text-[17px] text-muted max-w-[44ch] leading-relaxed">
+            <Box component="span" sx={{ color: "primary.main" }}>In stock today.</Box>
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ fontSize: "17px", maxWidth: "44ch", lineHeight: 1.6 }}>
             Sri Lanka&rsquo;s sharpest selection of mobile phones, headphones, chargers
             and accessories. Genuine products, official warranty, island-wide delivery.
-          </p>
-          <div className="flex gap-3 mt-2">
-            <Button size="lg" trailingIcon={<ArrowRight size={18} />}>
+          </Typography>
+          <Box className="flex gap-3 mt-2">
+            <Button variant="contained" size="large" endIcon={<ArrowForwardIcon />} component={Link} href="/products?category=phones">
               Shop phones
             </Button>
-            <Button size="lg" variant="secondary">
+            <Button variant="outlined" size="large" color="secondary" component={Link} href="/products">
               Browse accessories
             </Button>
-          </div>
-        </div>
+          </Box>
+        </Box>
 
         {/* Right column — placeholder image well */}
-        <div className="bg-surface min-h-[540px] grayscale" />
-      </section>
+        <Box sx={{ bgcolor: "background.paper", minHeight: 540, filter: "grayscale(1)" }} />
+      </Box>
 
       {/* ---- Shop by Category ---- */}
-      <section>
-        <div className="flex items-baseline justify-between px-[40px] pt-14 pb-5 max-md:px-gutter-mobile">
-          <h2 className="text-[32px]">Shop by category</h2>
-          <Link
+      <Box component="section">
+        <Box className="flex items-baseline justify-between px-[40px] pt-14 pb-5 max-md:px-4">
+          <Typography variant="h2" sx={{ fontSize: "32px" }}>Shop by category</Typography>
+          <Typography
+            component={Link}
             href="/categories"
-            className="text-[14px] font-semibold text-accent hover:underline"
+            variant="body2"
+            sx={{ fontSize: "14px", fontWeight: 600, color: "primary.main", "&:hover": { textDecoration: "underline" } }}
           >
             All categories
-          </Link>
-        </div>
+          </Typography>
+        </Box>
         <div className="ruled-grid grid-cols-6 max-md:grid-cols-2 rule-bottom">
           {categories.map((cat) => (
             <CategoryCard key={cat.slug} category={cat} />
           ))}
         </div>
-      </section>
+      </Box>
 
       {/* ---- Featured ---- */}
-      <section>
-        <div className="flex items-baseline justify-between px-[40px] pt-14 pb-5 max-md:px-gutter-mobile">
-          <h2 className="text-[32px]">Featured</h2>
-          <Link
+      <Box component="section">
+        <Box className="flex items-baseline justify-between px-[40px] pt-14 pb-5 max-md:px-4">
+          <Typography variant="h2" sx={{ fontSize: "32px" }}>Featured</Typography>
+          <Typography
+            component={Link}
             href="/products?featured=true"
-            className="text-[14px] font-semibold text-accent hover:underline"
+            variant="body2"
+            sx={{ fontSize: "14px", fontWeight: 600, color: "primary.main", "&:hover": { textDecoration: "underline" } }}
           >
             View all
-          </Link>
-        </div>
+          </Typography>
+        </Box>
         <div className="ruled-grid grid-cols-4 max-md:grid-cols-2 rule-bottom">
           {featuredProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
-      </section>
+      </Box>
 
       {/* ---- New Arrivals ---- */}
-      <section className="grid grid-cols-[4fr_8fr] max-md:grid-cols-1 rule-bottom">
-        <div className="px-[40px] pt-14 pb-10 max-md:px-gutter-mobile">
-          <h2 className="text-[32px]">New arrivals</h2>
-          <p className="text-[15px] text-muted mt-2 max-w-[32ch]">
+      <Box component="section" className="grid grid-cols-[4fr_8fr] max-md:grid-cols-1" sx={{ borderBottom: 2, borderColor: "divider" }}>
+        <Box className="px-[40px] pt-14 pb-10 max-md:px-4">
+          <Typography variant="h2" sx={{ fontSize: "32px" }}>New arrivals</Typography>
+          <Typography variant="body2" sx={{ mt: 1, maxWidth: "32ch", fontSize: "15px" }}>
             The latest additions to our catalogue, fresh off the shelf.
-          </p>
-        </div>
-        <div className="border-l-2 border-divider max-md:border-l-0 max-md:border-t-2">
+          </Typography>
+        </Box>
+        <Box sx={{ borderLeft: { xs: 0, md: 2 }, borderTop: { xs: 2, md: 0 }, borderColor: "divider" }}>
           {newArrivals.map((item, i) => (
-            <Link
+            <Box
               key={item.id}
+              component={Link}
               href={`/products/${item.slug}`}
-              className="flex items-center gap-5 px-5 py-4 border-b border-divider last:border-b-0 hover:bg-ink/[0.03] transition-colors"
+              className="flex items-center gap-5 px-5 py-4"
+              sx={{
+                borderBottom: 1,
+                borderColor: "divider",
+                "&:last-child": { borderBottom: 0 },
+                "&:hover": { bgcolor: "action.hover" },
+                transition: "background-color 0.15s",
+                textDecoration: "none",
+                color: "inherit",
+              }}
             >
-              <span className="text-[12px] tnum text-ink/50 w-[28px]">
+              <Typography variant="body2" sx={{ fontSize: "12px", fontVariantNumeric: "tabular-nums", width: 28, color: "text.secondary" }}>
                 {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="w-[48px] h-[48px] bg-surface grayscale shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="block text-[11px] uppercase tracking-[0.06em] text-ink/60">
+              </Typography>
+              <Box sx={{ width: 48, height: 48, bgcolor: "background.paper", filter: "grayscale(1)", flexShrink: 0 }} />
+              <Box className="flex-1 min-w-0">
+                <Typography variant="subtitle2" color="text.secondary">
                   {item.brand}
-                </span>
-                <span className="block text-[15px] font-[800] leading-tight truncate">
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 800, fontSize: "15px", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {item.name}
-                </span>
-              </div>
-              <span className="text-[12px] text-muted shrink-0">{item.category}</span>
-              <span className="text-[15px] font-[800] tnum shrink-0">
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: "12px", flexShrink: 0 }}>{item.category}</Typography>
+              <Typography sx={{ fontSize: "15px", fontWeight: 800, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
                 {formatCurrency(item.price)}
-              </span>
-              <ArrowRight size={16} className="text-ink/30 shrink-0" />
-            </Link>
+              </Typography>
+              <ArrowForwardIcon sx={{ fontSize: 16, color: "text.disabled", flexShrink: 0 }} />
+            </Box>
           ))}
-        </div>
-      </section>
+        </Box>
+      </Box>
 
       {/* ---- Service Band ---- */}
-      <section className="ruled-grid grid-cols-3 max-md:grid-cols-1 rule-bottom">
+      <Grid container component="section" sx={{ borderBottom: 2, borderColor: "divider" }}>
         {[
-          { icon: Truck, title: "Delivered in 2–4 days", desc: "Island-wide delivery with tracking" },
-          { icon: CreditCard, title: "Card, cash or transfer", desc: "Multiple payment methods accepted" },
-          { icon: ShieldCheck, title: "Genuine, with warranty", desc: "Official products, manufacturer warranty" },
+          { icon: LocalShippingIcon, title: "Delivered in 2-4 days", desc: "Island-wide delivery with tracking" },
+          { icon: CreditCardIcon, title: "Card, cash or transfer", desc: "Multiple payment methods accepted" },
+          { icon: VerifiedUserIcon, title: "Genuine, with warranty", desc: "Official products, manufacturer warranty" },
         ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="px-[40px] py-10 flex items-start gap-4 max-md:px-gutter-mobile">
-            <Icon size={24} className="text-ink shrink-0 mt-[2px]" />
-            <div>
-              <span className="block text-[16px] font-[800]">{title}</span>
-              <span className="block text-[13px] text-muted mt-1">{desc}</span>
-            </div>
-          </div>
+          <Grid key={title} size={{ xs: 12, md: 4 }} sx={{ borderRight: { md: 2 }, borderBottom: { xs: 2, md: 0 }, borderColor: "divider", "&:last-child": { borderRight: 0, borderBottom: 0 } }}>
+            <Box className="flex items-start gap-4 px-[40px] py-10 max-md:px-4">
+              <Icon sx={{ fontSize: 24, color: "text.primary", mt: "2px", flexShrink: 0 }} />
+              <Box>
+                <Typography variant="body1" sx={{ fontWeight: 800, fontSize: "16px" }}>{title}</Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, fontSize: "13px" }}>{desc}</Typography>
+              </Box>
+            </Box>
+          </Grid>
         ))}
-      </section>
+      </Grid>
     </>
   );
 }

@@ -2,8 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Stepper from "@mui/material/Stepper";
+import Step from "@mui/material/Step";
+import StepLabel from "@mui/material/StepLabel";
+import FormControl from "@mui/material/FormControl";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Radio from "@mui/material/Radio";
+import Divider from "@mui/material/Divider";
 import { formatCurrency } from "@/lib/utils";
 
 const cartItems = [
@@ -31,21 +43,29 @@ export default function CheckoutPage() {
     setAddress((prev) => ({ ...prev, [field]: e.target.value }));
 
   return (
-    <div className="px-[40px] max-md:px-gutter-mobile">
-      <nav className="py-3 text-[13px] text-muted">
-        <Link href="/" className="hover:text-ink">Home</Link>
-        <span className="mx-2">/</span>
-        <Link href="/cart" className="hover:text-ink">Cart</Link>
-        <span className="mx-2">/</span>
-        <span className="text-ink font-semibold">Checkout</span>
-      </nav>
+    <Box className="px-[40px] max-md:px-4">
+      <Box component="nav" className="py-3">
+        <Typography variant="body2" component="span" sx={{ fontSize: "13px" }}>
+          <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>Home</Link>
+          <span className="mx-2">/</span>
+          <Link href="/cart" style={{ textDecoration: "none", color: "inherit" }}>Cart</Link>
+          <span className="mx-2">/</span>
+          <Typography component="span" sx={{ fontSize: "13px", fontWeight: 600, color: "text.primary" }}>Checkout</Typography>
+        </Typography>
+      </Box>
 
-      <h1 className="text-[56px] max-md:text-[36px] mb-8">Checkout</h1>
+      <Typography variant="h1" sx={{ fontSize: { xs: "36px", md: "56px" }, mb: 2 }}>Checkout</Typography>
 
-      <div className="grid grid-cols-[1fr_380px] gap-0 max-md:grid-cols-1 rule-bottom">
-        <div className="pr-10 pb-10 max-md:pr-0 border-r-2 border-divider max-md:border-r-0">
-          <h2 className="text-[20px] mb-6">Delivery address</h2>
-          <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+      <Stepper activeStep={0} alternativeLabel sx={{ mb: 4 }}>
+        <Step><StepLabel>Delivery</StepLabel></Step>
+        <Step><StepLabel>Payment</StepLabel></Step>
+        <Step><StepLabel>Confirmation</StepLabel></Step>
+      </Stepper>
+
+      <Box className="grid grid-cols-[1fr_380px] gap-0 max-md:grid-cols-1" sx={{ borderBottom: 2, borderColor: "divider" }}>
+        <Box sx={{ borderRight: { xs: 0, md: 2 }, borderColor: "divider" }} className="pr-10 pb-10 max-md:pr-0">
+          <Typography variant="h5" sx={{ fontSize: "20px", mb: 3 }}>Delivery address</Typography>
+          <Box className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
             {[
               { label: "Recipient name", field: "recipientName", span: 2 },
               { label: "Phone", field: "phone", span: 1 },
@@ -55,74 +75,87 @@ export default function CheckoutPage() {
               { label: "City", field: "city", span: 1 },
               { label: "Province", field: "province", span: 1 },
             ].map(({ label, field, span }) => (
-              <div key={field} className={span === 2 ? "col-span-2 max-md:col-span-1" : ""}>
-                <label className="block text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-2">
-                  {label}
-                </label>
-                <Input value={(address as any)[field]} onChange={update(field)} />
-              </div>
-            ))}
-          </div>
-
-          <h2 className="text-[20px] mt-10 mb-4">Payment method</h2>
-          <div className="flex flex-col gap-2">
-            {[
-              { value: "STRIPE" as const, label: "Credit / Debit Card", desc: "Secure payment via Stripe" },
-              { value: "COD" as const, label: "Cash on Delivery", desc: "Pay when you receive" },
-              { value: "BANK_TRANSFER" as const, label: "Bank Transfer", desc: "Manual bank transfer" },
-            ].map((method) => (
-              <label
-                key={method.value}
-                className={`flex items-center gap-3 px-4 py-3 border-2 cursor-pointer transition-colors ${
-                  paymentMethod === method.value ? "border-accent bg-accent-100" : "border-divider hover:bg-ink/[0.02]"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value={method.value}
-                  checked={paymentMethod === method.value}
-                  onChange={() => setPaymentMethod(method.value)}
-                  className="accent-accent"
+              <Box key={field} className={span === 2 ? "col-span-2 max-md:col-span-1" : ""}>
+                <TextField
+                  label={label}
+                  value={(address as any)[field]}
+                  onChange={update(field)}
+                  fullWidth
+                  size="small"
                 />
-                <div>
-                  <span className="block text-[14px] font-[800]">{method.label}</span>
-                  <span className="block text-[12px] text-muted">{method.desc}</span>
-                </div>
-              </label>
+              </Box>
             ))}
-          </div>
-        </div>
+          </Box>
 
-        <div className="pl-10 pt-0 pb-10 max-md:pl-0 max-md:pt-6">
-          <h2 className="text-[20px] mb-6">Order summary</h2>
+          <Typography variant="h5" sx={{ fontSize: "20px", mt: 5, mb: 2 }}>Payment method</Typography>
+          <FormControl component="fieldset" fullWidth>
+            <RadioGroup
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
+            >
+              {[
+                { value: "STRIPE" as const, label: "Credit / Debit Card", desc: "Secure payment via Stripe" },
+                { value: "COD" as const, label: "Cash on Delivery", desc: "Pay when you receive" },
+                { value: "BANK_TRANSFER" as const, label: "Bank Transfer", desc: "Manual bank transfer" },
+              ].map((method) => (
+                <Card
+                  key={method.value}
+                  variant="outlined"
+                  sx={{
+                    mb: 1,
+                    borderWidth: 2,
+                    borderColor: paymentMethod === method.value ? "primary.main" : "divider",
+                    bgcolor: paymentMethod === method.value ? "primary.50" : "transparent",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                  onClick={() => setPaymentMethod(method.value)}
+                >
+                  <CardContent className="flex items-center gap-3" sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+                    <Radio value={method.value} color="primary" />
+                    <Box>
+                      <Typography sx={{ fontWeight: 800, fontSize: "14px" }}>{method.label}</Typography>
+                      <Typography variant="body2" sx={{ fontSize: "12px" }}>{method.desc}</Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </RadioGroup>
+          </FormControl>
+        </Box>
+
+        {/* Order summary */}
+        <Box className="pl-10 pb-10 max-md:pl-0 max-md:pt-6">
+          <Typography variant="h5" sx={{ fontSize: "20px", mb: 3 }}>Order summary</Typography>
           {cartItems.map((item) => (
-            <div key={item.id} className="flex justify-between text-[14px] mb-3">
-              <span>
-                {item.name} <span className="text-muted">x{item.quantity}</span>
-              </span>
-              <span className="font-[800] tnum">{formatCurrency(item.price * item.quantity)}</span>
-            </div>
+            <Box key={item.id} className="flex justify-between" sx={{ mb: 1.5 }}>
+              <Typography sx={{ fontSize: "14px" }}>
+                {item.name} <Typography component="span" color="text.secondary" sx={{ fontSize: "14px" }}>x{item.quantity}</Typography>
+              </Typography>
+              <Typography sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums", fontSize: "14px" }}>
+                {formatCurrency(item.price * item.quantity)}
+              </Typography>
+            </Box>
           ))}
-          <div className="border-t border-divider pt-3 mt-3">
-            <div className="flex justify-between text-[14px] mb-2">
-              <span className="text-muted">Subtotal</span>
-              <span className="tnum">{formatCurrency(subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-[14px] mb-4">
-              <span className="text-muted">Shipping</span>
-              <span className="tnum">{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
-            </div>
-            <div className="border-t-2 border-divider pt-4 flex justify-between text-[18px]">
-              <span className="font-[800]">Total</span>
-              <span className="font-[800] tnum">{formatCurrency(total)}</span>
-            </div>
-          </div>
-          <Button size="lg" block className="mt-6">
+          <Divider sx={{ my: 1.5 }} />
+          <Box className="flex justify-between" sx={{ mb: 1 }}>
+            <Typography variant="body2" sx={{ fontSize: "14px" }}>Subtotal</Typography>
+            <Typography sx={{ fontVariantNumeric: "tabular-nums", fontSize: "14px" }}>{formatCurrency(subtotal)}</Typography>
+          </Box>
+          <Box className="flex justify-between" sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ fontSize: "14px" }}>Shipping</Typography>
+            <Typography sx={{ fontVariantNumeric: "tabular-nums", fontSize: "14px" }}>{shipping === 0 ? "Free" : formatCurrency(shipping)}</Typography>
+          </Box>
+          <Divider sx={{ borderWidth: 1 }} />
+          <Box className="flex justify-between" sx={{ pt: 2 }}>
+            <Typography sx={{ fontWeight: 800, fontSize: "18px" }}>Total</Typography>
+            <Typography sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums", fontSize: "18px" }}>{formatCurrency(total)}</Typography>
+          </Box>
+          <Button variant="contained" size="large" fullWidth sx={{ mt: 3 }}>
             Place order
           </Button>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }

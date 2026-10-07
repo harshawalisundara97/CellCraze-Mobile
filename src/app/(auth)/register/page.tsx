@@ -3,8 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import MuiLink from "@mui/material/Link";
+import Alert from "@mui/material/Alert";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -44,26 +49,30 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      <div className="flex-1 bg-surface grayscale max-md:hidden" />
-      <div className="w-[480px] max-md:w-full flex flex-col justify-center px-[60px] max-md:px-gutter-mobile py-10">
-        <Link href="/" className="flex items-center gap-2 mb-12">
-          <span className="block w-[10px] h-[10px] bg-accent shrink-0" />
-          <span className="text-[17px] font-[800] tracking-[-0.02em]">CellCraze</span>
-        </Link>
+    <Box className="min-h-screen flex">
+      <Box className="flex-1 max-md:hidden" sx={{ bgcolor: "background.paper", filter: "grayscale(1)" }} />
+      <Paper
+        elevation={0}
+        className="flex flex-col justify-center"
+        sx={{ width: { xs: "100%", md: 480 }, px: { xs: 2, md: "60px" }, py: 5 }}
+      >
+        <Box component={Link} href="/" className="flex items-center gap-2 mb-12" sx={{ textDecoration: "none", color: "inherit" }}>
+          <Box sx={{ width: 10, height: 10, bgcolor: "primary.main", flexShrink: 0 }} />
+          <Typography sx={{ fontSize: "17px", fontWeight: 800, letterSpacing: "-0.02em" }}>CellCraze</Typography>
+        </Box>
 
-        <h1 className="text-[40px] mb-2">Create account</h1>
-        <p className="text-[15px] text-muted mb-8">
+        <Typography variant="h1" sx={{ fontSize: "40px", mb: 1 }}>Create account</Typography>
+        <Typography variant="body2" sx={{ fontSize: "15px", mb: 4 }}>
           Join CellCraze to start shopping.
-        </p>
+        </Typography>
 
         {error && (
-          <div className="bg-accent-100 text-accent-700 text-[13px] px-4 py-3 mb-6 border-l-2 border-accent">
+          <Alert severity="error" sx={{ mb: 3 }}>
             {error}
-          </div>
+          </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Box component="form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           {[
             { label: "Full name", field: "name", type: "text", placeholder: "Kasun Perera" },
             { label: "Email", field: "email", type: "email", placeholder: "you@example.com" },
@@ -71,31 +80,30 @@ export default function RegisterPage() {
             { label: "Password", field: "password", type: "password", placeholder: "Min 8 characters" },
             { label: "Confirm password", field: "confirmPassword", type: "password", placeholder: "Re-enter password" },
           ].map(({ label, field, type, placeholder }) => (
-            <div key={field}>
-              <label className="block text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-2">
-                {label}
-              </label>
-              <Input
-                type={type}
-                value={(form as any)[field]}
-                onChange={update(field)}
-                placeholder={placeholder}
-                required
-              />
-            </div>
+            <TextField
+              key={field}
+              label={label}
+              type={type}
+              value={(form as any)[field]}
+              onChange={update(field)}
+              placeholder={placeholder}
+              required
+              fullWidth
+              size="small"
+            />
           ))}
-          <Button size="lg" block type="submit" disabled={loading} className="mt-2">
+          <Button variant="contained" size="large" fullWidth type="submit" disabled={loading} sx={{ mt: 1 }}>
             {loading ? "Creating account..." : "Create account"}
           </Button>
-        </form>
+        </Box>
 
-        <p className="text-[14px] text-muted mt-8 text-center">
+        <Typography variant="body2" sx={{ mt: 4, textAlign: "center", fontSize: "14px" }}>
           Already have an account?{" "}
-          <Link href="/login" className="text-accent font-semibold hover:underline">
+          <MuiLink component={Link} href="/login" underline="hover" sx={{ fontWeight: 600, color: "primary.main" }}>
             Sign in
-          </Link>
-        </p>
-      </div>
-    </div>
+          </MuiLink>
+        </Typography>
+      </Paper>
+    </Box>
   );
 }

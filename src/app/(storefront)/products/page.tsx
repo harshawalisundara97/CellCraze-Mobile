@@ -3,9 +3,14 @@
 import { Suspense, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import TextField from "@mui/material/TextField";
+import Chip from "@mui/material/Chip";
+import Button from "@mui/material/Button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { ProductCard, type ProductCardData } from "@/components/storefront/product-card";
 
@@ -51,7 +56,7 @@ const sortOptions = [
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="px-[40px] py-10 text-muted">Loading products...</div>}>
+    <Suspense fallback={<Typography color="text.secondary" className="px-[40px] py-10">Loading products...</Typography>}>
       <ProductsContent />
     </Suspense>
   );
@@ -108,136 +113,151 @@ function ProductsContent() {
     activeFilters.push({ label: "In stock", clear: () => setInStockOnly(false) });
 
   return (
-    <div className="px-[40px] max-md:px-gutter-mobile">
+    <Box className="px-[40px] max-md:px-4">
       {/* Breadcrumb */}
-      <nav className="py-3 text-[13px] text-muted">
-        <Link href="/" className="hover:text-ink">Home</Link>
-        <span className="mx-2">/</span>
-        <span className="text-ink font-semibold">Products</span>
-      </nav>
+      <Box component="nav" className="py-3">
+        <Typography variant="body2" component="span" sx={{ fontSize: "13px" }}>
+          <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>Home</Link>
+          <span className="mx-2">/</span>
+          <Typography component="span" sx={{ fontSize: "13px", fontWeight: 600, color: "text.primary" }}>Products</Typography>
+        </Typography>
+      </Box>
 
       {/* Title row */}
-      <div className="flex items-baseline justify-between pb-6 rule-bottom">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-[56px] max-md:text-[36px]">Products</h1>
-          <span className="text-[15px] text-muted">{filtered.length} items</span>
-        </div>
+      <Box className="flex items-baseline justify-between pb-6" sx={{ borderBottom: 2, borderColor: "divider" }}>
+        <Box className="flex items-baseline gap-3">
+          <Typography variant="h1" sx={{ fontSize: { xs: "36px", md: "56px" } }}>Products</Typography>
+          <Typography variant="body2" sx={{ fontSize: "15px" }}>{filtered.length} items</Typography>
+        </Box>
         <SegmentedControl
           options={sortOptions}
           value={sort}
           onChange={setSort}
           name="sort"
         />
-      </div>
+      </Box>
 
       {/* Body grid */}
-      <div className="grid grid-cols-[280px_1fr] gap-0 max-md:grid-cols-1 mt-0">
+      <Box className="grid grid-cols-[280px_1fr] gap-0 max-md:grid-cols-1 mt-0">
         {/* Sidebar */}
-        <aside className="border-r-2 border-divider pr-5 pt-6 pb-10 max-md:border-r-0 max-md:border-b-2 max-md:pb-6 max-md:pr-0">
+        <Box component="aside" sx={{ borderRight: { xs: 0, md: 2 }, borderColor: "divider" }} className="pr-5 pt-6 pb-10 max-md:pr-0 max-md:pb-6">
           {/* Category tree */}
-          <div className="pb-5 border-b-2 border-divider">
-            <h3 className="text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-3">
+          <Box sx={{ pb: 2.5, borderBottom: 2, borderColor: "divider" }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
               Category
-            </h3>
-            <ul className="flex flex-col gap-1">
+            </Typography>
+            <Box className="flex flex-col gap-1">
               {categoryTree.map((cat) => (
-                <li key={cat.slug}>
-                  <button
-                    onClick={() =>
-                      setSelectedCategory(
-                        selectedCategory === cat.slug ? null : cat.slug,
-                      )
-                    }
-                    className={`w-full text-left text-[14px] py-1 flex justify-between ${
-                      selectedCategory === cat.slug
-                        ? "font-[800] text-accent"
-                        : "text-ink hover:text-accent"
-                    } transition-colors`}
-                  >
-                    <span>{cat.label}</span>
-                    <span className="text-muted tnum">{cat.count}</span>
-                  </button>
-                </li>
+                <Button
+                  key={cat.slug}
+                  onClick={() =>
+                    setSelectedCategory(
+                      selectedCategory === cat.slug ? null : cat.slug,
+                    )
+                  }
+                  sx={{
+                    justifyContent: "space-between",
+                    textTransform: "none",
+                    fontWeight: selectedCategory === cat.slug ? 800 : 400,
+                    color: selectedCategory === cat.slug ? "primary.main" : "text.primary",
+                    fontSize: "14px",
+                    py: 0.5,
+                    px: 0,
+                    minWidth: 0,
+                    "&:hover": { color: "primary.main", bgcolor: "transparent" },
+                  }}
+                  fullWidth
+                  disableRipple
+                >
+                  <span>{cat.label}</span>
+                  <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums", fontSize: "14px" }}>{cat.count}</Typography>
+                </Button>
               ))}
-            </ul>
-          </div>
+            </Box>
+          </Box>
 
           {/* Brands */}
-          <div className="py-5 border-b-2 border-divider">
-            <h3 className="text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-3">
+          <Box sx={{ py: 2.5, borderBottom: 2, borderColor: "divider" }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
               Brand
-            </h3>
-            <ul className="flex flex-col gap-2">
+            </Typography>
+            <Box className="flex flex-col gap-1">
               {brands.map((brand) => (
-                <li key={brand}>
-                  <label className="flex items-center gap-2 text-[14px] cursor-pointer">
-                    <input
-                      type="checkbox"
+                <FormControlLabel
+                  key={brand}
+                  control={
+                    <Checkbox
                       checked={selectedBrands.includes(brand)}
                       onChange={() => toggleBrand(brand)}
-                      className="accent-accent"
+                      size="small"
+                      color="primary"
                     />
-                    {brand}
-                  </label>
-                </li>
+                  }
+                  label={<Typography sx={{ fontSize: "14px" }}>{brand}</Typography>}
+                  sx={{ ml: 0 }}
+                />
               ))}
-            </ul>
-          </div>
+            </Box>
+          </Box>
 
           {/* Price */}
-          <div className="py-5 border-b-2 border-divider">
-            <h3 className="text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-3">
+          <Box sx={{ py: 2.5, borderBottom: 2, borderColor: "divider" }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
               Price (Rs)
-            </h3>
-            <div className="flex gap-2">
-              <Input
+            </Typography>
+            <Box className="flex gap-2">
+              <TextField
                 type="number"
                 placeholder="Min"
                 value={priceMin}
                 onChange={(e) => setPriceMin(e.target.value)}
-                className="w-full"
+                size="small"
+                fullWidth
               />
-              <Input
+              <TextField
                 type="number"
                 placeholder="Max"
                 value={priceMax}
                 onChange={(e) => setPriceMax(e.target.value)}
-                className="w-full"
+                size="small"
+                fullWidth
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
 
           {/* In stock */}
-          <div className="py-5">
-            <label className="flex items-center gap-2 text-[14px] cursor-pointer">
-              <input
-                type="checkbox"
-                checked={inStockOnly}
-                onChange={() => setInStockOnly(!inStockOnly)}
-                className="accent-accent"
-              />
-              In stock only
-            </label>
-          </div>
-        </aside>
+          <Box sx={{ py: 2.5 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={inStockOnly}
+                  onChange={() => setInStockOnly(!inStockOnly)}
+                  size="small"
+                  color="primary"
+                />
+              }
+              label={<Typography sx={{ fontSize: "14px" }}>In stock only</Typography>}
+              sx={{ ml: 0 }}
+            />
+          </Box>
+        </Box>
 
         {/* Main */}
-        <div className="pl-0 pt-6 max-md:pt-6">
+        <Box className="pl-0 pt-6 max-md:pt-6">
           {/* Active filter chips */}
           {activeFilters.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-5 pl-5 max-md:pl-0">
+            <Box className="flex flex-wrap gap-2 mb-5 pl-5 max-md:pl-0">
               {activeFilters.map((f) => (
-                <button
+                <Chip
                   key={f.label}
-                  onClick={f.clear}
-                  className="inline-flex items-center gap-1 bg-surface px-3 py-[5px] text-[12px] font-semibold text-ink hover:bg-neutral-300 transition-colors"
-                >
-                  {f.label}
-                  <X size={12} />
-                </button>
+                  label={f.label}
+                  onDelete={f.clear}
+                  size="small"
+                  variant="filled"
+                />
               ))}
               {activeFilters.length > 1 && (
-                <button
+                <Button
                   onClick={() => {
                     setSelectedCategory(null);
                     setSelectedBrands([]);
@@ -245,12 +265,13 @@ function ProductsContent() {
                     setPriceMin("");
                     setPriceMax("");
                   }}
-                  className="text-[12px] font-semibold text-accent hover:underline"
+                  sx={{ fontSize: "12px", fontWeight: 600, color: "primary.main", textTransform: "none", p: 0, minWidth: 0, "&:hover": { textDecoration: "underline", bgcolor: "transparent" } }}
+                  disableRipple
                 >
                   Clear all
-                </button>
+                </Button>
               )}
-            </div>
+            </Box>
           )}
 
           {/* Product grid */}
@@ -261,25 +282,25 @@ function ProductsContent() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between py-6 px-5 rule-top mt-0">
-            <span className="text-[13px] text-muted">
+          <Box className="flex items-center justify-between py-6 px-5" sx={{ borderTop: 2, borderColor: "divider" }}>
+            <Typography variant="body2" sx={{ fontSize: "13px" }}>
               Showing {filtered.length} of {allProducts.length} products
-            </span>
-            <div className="flex gap-1">
+            </Typography>
+            <Box className="flex gap-1">
               {[1, 2, 3].map((page) => (
-                <button
+                <Button
                   key={page}
-                  className={`min-w-[36px] h-[36px] flex items-center justify-center text-[13px] font-semibold ${
-                    page === 1 ? "bg-accent text-bg" : "hover:bg-ink/[0.05] text-ink"
-                  }`}
+                  variant={page === 1 ? "contained" : "text"}
+                  color={page === 1 ? "primary" : "inherit"}
+                  sx={{ minWidth: 36, height: 36, fontSize: "13px", fontWeight: 600, px: 0 }}
                 >
                   {page}
-                </button>
+                </Button>
               ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { Card, CardContent, Typography, Box } from "@mui/material";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export interface CategoryCardData {
   name: string;
@@ -18,43 +21,84 @@ export function CategoryCard({ category }: CategoryCardProps) {
   const indexLabel = String(category.index).padStart(2, "0");
 
   return (
-    <Link
+    <Card
+      component={Link}
       href={`/categories/${category.slug}`}
-      className="group relative p-5 flex flex-col gap-3"
+      sx={{
+        textDecoration: "none",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        transition: "border-color 0.2s",
+        "&:hover": { borderColor: "primary.main" },
+        "&:hover .category-name": { color: "primary.main" },
+        "&:hover .category-arrow": { color: "primary.main" },
+      }}
     >
-      {/* Index */}
-      <span className="text-[12px] tnum text-ink/70">{indexLabel}</span>
+      <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, flex: 1, p: 2.5, "&:last-child": { pb: 2.5 } }}>
+        {/* Index */}
+        <Typography
+          variant="body2"
+          sx={{ fontSize: 12, color: "text.secondary", fontVariantNumeric: "tabular-nums" }}
+        >
+          {indexLabel}
+        </Typography>
 
-      {/* Image well */}
-      <div className="relative aspect-square bg-surface overflow-hidden">
-        {category.image ? (
-          <Image
-            src={category.image}
-            alt={category.name}
-            fill
-            className="object-contain grayscale"
-            sizes="(max-width: 768px) 50vw, 25vw"
-          />
-        ) : (
-          <div className="w-full h-full bg-surface" />
-        )}
-      </div>
+        {/* Image well */}
+        <Box
+          sx={{
+            position: "relative",
+            aspectRatio: "1/1",
+            bgcolor: "background.default",
+            overflow: "hidden",
+          }}
+        >
+          {category.image ? (
+            <Image
+              src={category.image}
+              alt={category.name}
+              fill
+              className="object-contain grayscale"
+              sizes="(max-width: 768px) 50vw, 25vw"
+            />
+          ) : (
+            <Box sx={{ width: "100%", height: "100%", bgcolor: "background.default" }} />
+          )}
+        </Box>
 
-      {/* Name + count */}
-      <div>
-        <span className="block text-[18px] font-[800] leading-tight text-ink group-hover:text-accent transition-colors">
-          {category.name}
-        </span>
-        <span className="block text-[12px] text-muted mt-[2px]">
-          {category.productCount} products
-        </span>
-      </div>
+        {/* Name + count */}
+        <Box>
+          <Typography
+            className="category-name"
+            sx={{
+              fontSize: 18,
+              fontWeight: 800,
+              lineHeight: 1.25,
+              color: "text.primary",
+              transition: "color 0.2s",
+            }}
+          >
+            {category.name}
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: 12, color: "text.secondary", mt: 0.25 }}>
+            {category.productCount} products
+          </Typography>
+        </Box>
 
-      {/* Arrow */}
-      <ArrowRight
-        size={18}
-        className="absolute bottom-5 right-5 text-ink/40 group-hover:text-accent transition-colors"
-      />
-    </Link>
+        {/* Arrow */}
+        <ArrowForwardIcon
+          className="category-arrow"
+          sx={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            fontSize: 18,
+            color: "text.disabled",
+            transition: "color 0.2s",
+          }}
+        />
+      </CardContent>
+    </Card>
   );
 }

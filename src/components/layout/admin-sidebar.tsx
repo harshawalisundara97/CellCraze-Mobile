@@ -162,9 +162,10 @@ export function AdminSidebar() {
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
-                    primaryTypographyProps={{
-                      fontSize: 14,
-                      fontWeight: active ? 800 : 400,
+                    slotProps={{
+                      primary: {
+                        sx: { fontSize: 14, fontWeight: active ? 800 : 400 },
+                      },
                     }}
                   />
                 </ListItemButton>

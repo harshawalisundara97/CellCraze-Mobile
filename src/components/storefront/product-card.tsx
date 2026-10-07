@@ -2,8 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  Typography,
+  Button,
+  Chip,
+  Box,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import { formatCurrency, getStockStatus } from "@/lib/utils";
 
 export interface ProductCardData {
@@ -33,93 +43,142 @@ export function ProductCard({ product }: ProductCardProps) {
         )
       : null;
 
+  const stockDotColor =
+    stock.color === "accent"
+      ? "primary.main"
+      : stock.color === "neutral-400"
+        ? "grey.400"
+        : "text.primary";
+
   return (
-    <div className="p-5 flex flex-col gap-[14px]">
-      {/* Image well */}
-      <Link
-        href={`/products/${product.slug}`}
-        className="relative block aspect-square bg-surface overflow-hidden"
-      >
-        {primaryImage ? (
-          <Image
-            src={primaryImage.url}
-            alt={primaryImage.altText ?? product.name}
-            fill
-            className="object-contain grayscale"
-            sizes="(max-width: 768px) 50vw, 25vw"
-          />
-        ) : (
-          <div className="w-full h-full bg-surface" />
-        )}
-        {discount && (
-          <span className="absolute top-0 left-0 bg-accent text-bg text-[11px] font-[800] px-[6px] py-[3px] leading-none">
-            -{discount}%
-          </span>
-        )}
-      </Link>
-
-      {/* Brand + name */}
-      <div>
-        {product.brand && (
-          <span className="block text-[11px] uppercase tracking-[0.06em] text-ink/70 mb-[2px]">
-            {product.brand}
-          </span>
-        )}
-        <Link
-          href={`/products/${product.slug}`}
-          className="block text-[16px] font-[800] leading-tight text-ink hover:text-accent transition-colors"
-        >
-          {product.name}
+    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Image area */}
+      <Box sx={{ position: "relative" }}>
+        <Link href={`/products/${product.slug}`}>
+          <CardMedia
+            sx={{
+              aspectRatio: "1/1",
+              bgcolor: "background.default",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {primaryImage ? (
+              <Image
+                src={primaryImage.url}
+                alt={primaryImage.altText ?? product.name}
+                fill
+                className="object-contain grayscale"
+                sizes="(max-width: 768px) 50vw, 25vw"
+              />
+            ) : (
+              <Box sx={{ width: "100%", height: "100%", bgcolor: "background.default" }} />
+            )}
+          </CardMedia>
         </Link>
-      </div>
-
-      {/* Prices */}
-      <div className="flex items-baseline gap-2">
-        <span className="text-[19px] font-[800] text-ink">
-          {formatCurrency(product.price)}
-        </span>
-        {product.compareAtPrice && product.compareAtPrice > product.price && (
-          <span className="text-[13px] line-through text-ink/60">
-            {formatCurrency(product.compareAtPrice)}
-          </span>
+        {discount && (
+          <Chip
+            label={`-${discount}%`}
+            color="primary"
+            size="small"
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              height: 22,
+              fontWeight: 800,
+              fontSize: 11,
+            }}
+          />
         )}
-      </div>
+      </Box>
 
-      {/* Stock indicator */}
-      <div className="flex items-center gap-[6px]">
-        <span
-          className={`block w-2 h-2 ${
-            stock.color === "accent"
-              ? "bg-accent"
-              : stock.color === "neutral-400"
-                ? "bg-neutral-400"
-                : "bg-ink"
-          }`}
-          aria-hidden="true"
-        />
-        <span className="text-[12px] text-muted">{stock.label}</span>
-      </div>
+      <CardContent sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 1.5, pb: 0 }}>
+        {/* Brand + name */}
+        <Box>
+          {product.brand && (
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "text.secondary", mb: 0.25, fontSize: 11 }}
+            >
+              {product.brand}
+            </Typography>
+          )}
+          <Typography
+            component={Link}
+            href={`/products/${product.slug}`}
+            sx={{
+              display: "block",
+              fontSize: 16,
+              fontWeight: 800,
+              lineHeight: 1.25,
+              color: "text.primary",
+              textDecoration: "none",
+              "&:hover": { color: "primary.main" },
+              transition: "color 0.2s",
+            }}
+          >
+            {product.name}
+          </Typography>
+        </Box>
 
-      {/* Action button */}
-      {product.stockQuantity > 0 ? (
-        <Button
-          variant="secondary"
-          block
-          trailingIcon={<Plus size={16} />}
-          className="mt-auto"
-        >
-          Add to cart
-        </Button>
-      ) : (
-        <Button
-          variant="secondary"
-          block
-          trailingIcon={<Bell size={16} />}
-          className="mt-auto"
-        >
-          Notify me
-        </Button>
-      )}
-    </div>
+        {/* Prices */}
+        <Box className="flex items-baseline gap-2">
+          <Typography sx={{ fontSize: 19, fontWeight: 800, color: "text.primary" }}>
+            {formatCurrency(product.price)}
+          </Typography>
+          {product.compareAtPrice && product.compareAtPrice > product.price && (
+            <Typography
+              sx={{
+                fontSize: 13,
+                color: "text.secondary",
+                textDecoration: "line-through",
+              }}
+            >
+              {formatCurrency(product.compareAtPrice)}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Stock indicator */}
+        <Box className="flex items-center gap-[6px]">
+          <Box
+            component="span"
+            sx={{
+              display: "block",
+              width: 8,
+              height: 8,
+              bgcolor: stockDotColor,
+            }}
+            aria-hidden="true"
+          />
+          <Typography variant="body2" sx={{ fontSize: 12, color: "text.secondary" }}>
+            {stock.label}
+          </Typography>
+        </Box>
+      </CardContent>
+
+      <CardActions sx={{ px: 2, pb: 2, pt: 1, mt: "auto" }}>
+        {product.stockQuantity > 0 ? (
+          <Button
+            variant="outlined"
+            color="secondary"
+            fullWidth
+            endIcon={<AddIcon />}
+          >
+            Add to cart
+          </Button>
+        ) : (
+          <Button
+            variant="outlined"
+            color="secondary"
+            fullWidth
+            endIcon={<NotificationsNoneIcon />}
+          >
+            Notify me
+          </Button>
+        )}
+      </CardActions>
+    </Card>
   );
 }

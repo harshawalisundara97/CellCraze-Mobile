@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tag } from "@/components/ui/tag";
-import { StockIndicator } from "@/components/ui/stock-indicator";
+import { Suspense, useState } from "react";
+import { Box, Typography, Button, TextField, Chip, InputAdornment } from "@mui/material";
+import { Add, Search } from "@mui/icons-material";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { formatCurrency } from "@/lib/utils";
 
 const products = [
@@ -20,6 +17,49 @@ const products = [
   { id: "8", sku: "SPG-ULTRA", name: "Spigen Ultra Hybrid Case", brand: "Spigen", category: "Accessories", price: 4900, stockQuantity: 50, isActive: true, isFeatured: false },
 ];
 
+const columns: GridColDef[] = [
+  { field: "sku", headerName: "SKU", width: 140 },
+  { field: "name", headerName: "Product", flex: 1, minWidth: 180 },
+  { field: "category", headerName: "Category", width: 120 },
+  { field: "brand", headerName: "Brand", width: 110 },
+  {
+    field: "price",
+    headerName: "Price",
+    width: 130,
+    align: "right",
+    headerAlign: "right",
+    renderCell: (params) => (
+      <Typography variant="body2" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+        {formatCurrency(params.value)}
+      </Typography>
+    ),
+  },
+  {
+    field: "stockQuantity",
+    headerName: "Stock",
+    width: 100,
+    align: "center",
+    headerAlign: "center",
+    renderCell: (params) => (
+      <Chip
+        label={params.value}
+        size="small"
+        color={params.value === 0 ? "error" : params.value <= 5 ? "warning" : "success"}
+        sx={{ fontWeight: 700, minWidth: 40 }}
+      />
+    ),
+  },
+  {
+    field: "isFeatured",
+    headerName: "Status",
+    width: 110,
+    align: "center",
+    headerAlign: "center",
+    renderCell: (params) =>
+      params.value ? <Chip label="Featured" color="info" size="small" /> : null,
+  },
+];
+
 export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
 
@@ -30,55 +70,55 @@ export default function AdminProductsPage() {
   );
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[32px]">Products</h1>
-          <p className="text-[14px] text-muted">{products.length} products</p>
-        </div>
-        <Button leadingIcon={<Plus size={16} />}>Add product</Button>
+    <Box>
+      <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            Products
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {products.length} products
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<Add />}>
+          Add product
+        </Button>
       </div>
 
-      <div className="mb-6 max-w-[320px]">
-        <Input
-          variant="search"
+      <Box sx={{ mb: 3, maxWidth: 320 }}>
+        <TextField
+          size="small"
+          fullWidth
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
         />
-      </div>
+      </Box>
 
-      <div className="border-t-2 border-divider">
-        <div className="grid grid-cols-[100px_1fr_100px_100px_120px_80px_80px] gap-4 py-3 text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 border-b-2 border-divider">
-          <span>SKU</span>
-          <span>Product</span>
-          <span>Category</span>
-          <span>Brand</span>
-          <span className="text-right">Price</span>
-          <span className="text-center">Stock</span>
-          <span className="text-center">Status</span>
-        </div>
-        {filtered.map((product) => (
-          <Link
-            key={product.id}
-            href={`/admin/products/${product.id}`}
-            className="grid grid-cols-[100px_1fr_100px_100px_120px_80px_80px] gap-4 items-center py-3 border-b border-divider text-[14px] hover:bg-ink/[0.02] transition-colors"
-          >
-            <span className="tnum text-muted">{product.sku}</span>
-            <span className="font-[800] truncate">{product.name}</span>
-            <span className="text-muted">{product.category}</span>
-            <span className="text-muted">{product.brand}</span>
-            <span className="text-right tnum font-[800]">{formatCurrency(product.price)}</span>
-            <span className="flex items-center justify-center gap-2">
-              <StockIndicator quantity={product.stockQuantity} />
-              <span className="tnum">{product.stockQuantity}</span>
-            </span>
-            <span className="flex justify-center">
-              {product.isFeatured && <Tag variant="accent">Featured</Tag>}
-            </span>
-          </Link>
-        ))}
-      </div>
-    </div>
+      <Suspense fallback={<Box sx={{ height: 400 }} />}>
+        <DataGrid
+        rows={filtered}
+        columns={columns}
+        autoHeight
+        disableRowSelectionOnClick
+        pageSizeOptions={[10, 25]}
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        sx={{
+          border: 1,
+          borderColor: "divider",
+          "& .MuiDataGrid-columnHeaders": { fontWeight: 700 },
+        }}
+      />
+      </Suspense>
+    </Box>
   );
 }

@@ -1,7 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Tabs,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  LinearProgress,
+} from "@mui/material";
 import { formatCurrency } from "@/lib/utils";
 
 const periodOptions = [
@@ -47,85 +61,194 @@ export default function AdminReportsPage() {
   const margin = Math.round((profit / totalRevenue) * 100);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[32px]">Reports</h1>
-          <p className="text-[14px] text-muted">Sales and performance analytics</p>
-        </div>
-        <SegmentedControl options={periodOptions} value={period} onChange={setPeriod} name="period" />
+    <Box>
+      <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            Reports
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Sales and performance analytics
+          </Typography>
+        </Box>
+        <Tabs value={period} onChange={(_, v) => setPeriod(v)}>
+          {periodOptions.map((opt) => (
+            <Tab key={opt.value} label={opt.label} value={opt.value} />
+          ))}
+        </Tabs>
       </div>
 
-      <div className="ruled-grid grid-cols-4 max-md:grid-cols-2 rule-bottom mb-8">
+      <div className="grid grid-cols-4 max-md:grid-cols-2 gap-3" style={{ marginBottom: 32 }}>
         {[
           { label: "Revenue", value: formatCurrency(totalRevenue) },
           { label: "Profit", value: formatCurrency(profit) },
           { label: "Orders", value: String(totalOrders) },
           { label: "Margin", value: `${margin}%` },
         ].map((stat) => (
-          <div key={stat.label} className="px-6 py-5">
-            <span className="block text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 mb-2">
-              {stat.label}
-            </span>
-            <span className="block text-[28px] font-[800] tnum">{stat.value}</span>
-          </div>
+          <Card key={stat.label} variant="outlined">
+            <CardContent>
+              <Typography variant="overline" color="text.secondary">
+                {stat.label}
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                {stat.value}
+              </Typography>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-2 gap-8 max-md:grid-cols-1">
-        <div>
-          <h2 className="text-[20px] mb-4">Sales by day</h2>
-          <div className="border-t-2 border-divider">
-            <div className="grid grid-cols-[80px_1fr_60px_100px] gap-4 py-2 text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60 border-b border-divider">
-              <span>Date</span>
-              <span>Revenue</span>
-              <span className="text-center">Orders</span>
-              <span className="text-right">Profit</span>
-            </div>
-            {salesData.map((day) => (
-              <div key={day.date} className="grid grid-cols-[80px_1fr_60px_100px] gap-4 items-center py-2 border-b border-divider text-[14px]">
-                <span className="text-muted">{day.date}</span>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-[8px] bg-surface">
-                    <div className="h-full bg-accent" style={{ width: `${(day.revenue / 700000) * 100}%` }} />
-                  </div>
-                  <span className="tnum font-semibold w-[100px] text-right">{formatCurrency(day.revenue)}</span>
-                </div>
-                <span className="text-center tnum">{day.orders}</span>
-                <span className="text-right tnum font-semibold">{formatCurrency(day.revenue - day.cost)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Sales by day
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Revenue</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Orders</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Profit</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {salesData.map((day) => (
+                  <TableRow key={day.date} hover>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {day.date}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Box sx={{ flex: 1 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={(day.revenue / 700000) * 100}
+                            sx={{ height: 8, borderRadius: 1 }}
+                          />
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", minWidth: 100, textAlign: "right" }}
+                        >
+                          {formatCurrency(day.revenue)}
+                        </Typography>
+                      </div>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+                        {day.orders}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+                        {formatCurrency(day.revenue - day.cost)}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-        <div>
-          <h2 className="text-[20px] mb-4">Top products</h2>
-          <div className="border-t-2 border-divider">
-            {topProducts.map((product, i) => (
-              <div key={product.name} className="flex items-center gap-3 py-3 border-b border-divider text-[14px]">
-                <span className="text-[12px] tnum text-ink/50 w-[24px]">{i + 1}</span>
-                <span className="flex-1 font-[800] truncate">{product.name}</span>
-                <span className="text-[12px] text-muted tnum">{product.sold} sold</span>
-                <span className="font-[800] tnum w-[120px] text-right">{formatCurrency(product.revenue)}</span>
-              </div>
-            ))}
-          </div>
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Top products
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700, width: 40 }}>#</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Product</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Sold</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Revenue</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {topProducts.map((product, i) => (
+                  <TableRow key={product.name} hover>
+                    <TableCell>
+                      <Typography variant="caption" color="text.secondary">
+                        {i + 1}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                        {product.name}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+                        {product.sold}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="body2" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                        {formatCurrency(product.revenue)}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-          <h2 className="text-[20px] mt-8 mb-4">Sales by category</h2>
-          <div className="border-t-2 border-divider">
-            {categorySales.map((cat) => (
-              <div key={cat.category} className="flex items-center gap-3 py-3 border-b border-divider text-[14px]">
-                <span className="w-[120px] font-semibold">{cat.category}</span>
-                <div className="flex-1 h-[8px] bg-surface">
-                  <div className="h-full bg-ink" style={{ width: `${cat.percentage}%` }} />
-                </div>
-                <span className="tnum text-muted w-[40px] text-right">{cat.percentage}%</span>
-                <span className="font-[800] tnum w-[120px] text-right">{formatCurrency(cat.revenue)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+          <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+            Sales by category
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Share</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Revenue</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {categorySales.map((cat) => (
+                  <TableRow key={cat.category} hover>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {cat.category}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Box sx={{ flex: 1 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={cat.percentage}
+                            color="inherit"
+                            sx={{ height: 8, borderRadius: 1 }}
+                          />
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontVariantNumeric: "tabular-nums", minWidth: 32, textAlign: "right" }}
+                        >
+                          {cat.percentage}%
+                        </Typography>
+                      </div>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="body2" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                        {formatCurrency(cat.revenue)}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       </div>
-    </div>
+    </Box>
   );
 }
