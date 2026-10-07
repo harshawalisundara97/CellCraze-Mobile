@@ -1,13 +1,33 @@
 "use client";
 
-import { Package, ShoppingCart, Users, AlertTriangle, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+} from "@mui/material";
+import {
+  TrendingUp,
+  ShoppingCart,
+  People,
+  Warning,
+  ArrowUpward,
+  ArrowDownward,
+} from "@mui/icons-material";
 import { formatCurrency } from "@/lib/utils";
 
 const stats = [
   { label: "Revenue today", value: formatCurrency(12450000), change: "+12.5%", up: true, icon: TrendingUp },
   { label: "Orders today", value: "23", change: "+8.2%", up: true, icon: ShoppingCart },
-  { label: "New customers", value: "5", change: "-2.1%", up: false, icon: Users },
-  { label: "Low stock alerts", value: "4", change: "", up: false, icon: AlertTriangle },
+  { label: "New customers", value: "5", change: "-2.1%", up: false, icon: People },
+  { label: "Low stock alerts", value: "4", change: "", up: false, icon: Warning },
 ];
 
 const recentOrders = [
@@ -25,82 +45,150 @@ const lowStockItems = [
   { name: "Pixel 9 Pro", sku: "PX9P-128", stock: 7, reorder: 3, category: "Phones" },
 ];
 
-const statusColor: Record<string, string> = {
-  CONFIRMED: "bg-blue-500",
-  PROCESSING: "bg-yellow-500",
-  SHIPPED: "bg-purple-500",
-  DELIVERED: "bg-green-600",
-  CANCELLED: "bg-neutral-400",
+const statusChipColor: Record<string, "info" | "warning" | "secondary" | "success" | "default"> = {
+  CONFIRMED: "info",
+  PROCESSING: "warning",
+  SHIPPED: "secondary",
+  DELIVERED: "success",
+  CANCELLED: "default",
 };
 
 export default function AdminDashboardPage() {
   return (
-    <div>
-      <h1 className="text-[32px] mb-1">Dashboard</h1>
-      <p className="text-[14px] text-muted mb-8">Overview of your store performance</p>
+    <Box>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+        Dashboard
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+        Overview of your store performance
+      </Typography>
 
-      <div className="ruled-grid grid-cols-4 max-md:grid-cols-2 rule-bottom mb-8">
+      <div className="grid grid-cols-4 max-md:grid-cols-2 gap-3" style={{ marginBottom: 32 }}>
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="px-6 py-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] uppercase tracking-[0.08em] font-semibold text-ink/60">
-                  {stat.label}
-                </span>
-                <Icon size={18} className="text-ink/30" />
-              </div>
-              <span className="block text-[28px] font-[800] tnum">{stat.value}</span>
-              {stat.change && (
-                <span className={`inline-flex items-center gap-1 text-[12px] font-semibold mt-1 ${stat.up ? "text-green-600" : "text-accent"}`}>
-                  {stat.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                  {stat.change} vs yesterday
-                </span>
-              )}
-            </div>
+            <Card key={stat.label} variant="outlined">
+              <CardContent>
+                <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+                  <Typography variant="overline" color="text.secondary">
+                    {stat.label}
+                  </Typography>
+                  <Icon sx={{ fontSize: 20, color: "text.disabled" }} />
+                </div>
+                <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                  {stat.value}
+                </Typography>
+                {stat.change && (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+                    {stat.up ? (
+                      <ArrowUpward sx={{ fontSize: 14, color: "success.main" }} />
+                    ) : (
+                      <ArrowDownward sx={{ fontSize: 14, color: "error.main" }} />
+                    )}
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: 600, color: stat.up ? "success.main" : "error.main" }}
+                    >
+                      {stat.change} vs yesterday
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
           );
         })}
       </div>
 
       <div className="grid grid-cols-[1fr_400px] gap-8 max-md:grid-cols-1">
-        <div>
-          <h2 className="text-[20px] mb-4">Recent orders</h2>
-          <div className="border-t-2 border-divider">
-            {recentOrders.map((order) => (
-              <div key={order.orderNumber} className="flex items-center gap-4 py-3 border-b border-divider text-[14px]">
-                <span className="font-[800] tnum w-[100px] shrink-0">{order.orderNumber}</span>
-                <span className="flex-1 truncate">{order.customer}</span>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`w-[8px] h-[8px] ${statusColor[order.status] || "bg-neutral-400"}`} />
-                  <span className="text-[12px] text-muted capitalize w-[80px]">
-                    {order.status.toLowerCase()}
-                  </span>
-                </div>
-                <span className="font-[800] tnum w-[100px] text-right shrink-0">{formatCurrency(order.total)}</span>
-                <span className="text-[12px] text-muted w-[80px] text-right shrink-0">{order.date}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Recent orders
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Order</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Customer</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Total</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Time</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {recentOrders.map((order) => (
+                  <TableRow key={order.orderNumber} hover>
+                    <TableCell sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                      {order.orderNumber}
+                    </TableCell>
+                    <TableCell>{order.customer}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.status.toLowerCase()}
+                        color={statusChipColor[order.status] || "default"}
+                        size="small"
+                        sx={{ textTransform: "capitalize" }}
+                      />
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                      {formatCurrency(order.total)}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="caption" color="text.secondary">
+                        {order.date}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-        <div>
-          <h2 className="text-[20px] mb-4">Low stock alerts</h2>
-          <div className="border-t-2 border-divider">
-            {lowStockItems.map((item) => (
-              <div key={item.sku} className="flex items-center gap-3 py-3 border-b border-divider text-[14px]">
-                <span className={`w-[8px] h-[8px] shrink-0 ${item.stock === 0 ? "bg-accent" : "bg-yellow-500"}`} />
-                <div className="flex-1 min-w-0">
-                  <span className="block font-[800] truncate">{item.name}</span>
-                  <span className="block text-[12px] text-muted">{item.sku} — {item.category}</span>
-                </div>
-                <span className={`text-[14px] font-[800] tnum ${item.stock === 0 ? "text-accent" : "text-yellow-600"}`}>
-                  {item.stock}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Low stock alerts
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Product</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>SKU</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Stock</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {lowStockItems.map((item) => (
+                  <TableRow key={item.sku} hover>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                        {item.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {item.category}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.sku}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Chip
+                        label={item.stock}
+                        color={item.stock === 0 ? "error" : "warning"}
+                        size="small"
+                        sx={{ fontWeight: 800 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       </div>
-    </div>
+    </Box>
   );
 }

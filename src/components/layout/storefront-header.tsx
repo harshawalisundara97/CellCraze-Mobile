@@ -1,7 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Search, User, Heart, ShoppingBag, Menu } from "lucide-react";
+import {
+  AppBar,
+  Toolbar,
+  TextField,
+  IconButton,
+  Badge,
+  Button,
+  Box,
+  Typography,
+  InputAdornment,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
+import MenuIcon from "@mui/icons-material/Menu";
 import { Logo } from "./logo";
 
 const utilityMessages = [
@@ -23,121 +38,253 @@ export function StorefrontHeader() {
   const cartCount = 0;
 
   return (
-    <header>
-      {/* Utility bar -- hidden on mobile */}
-      <div className="hidden md:flex items-center bg-ink text-bg text-[12px] px-[40px] py-2 gap-8">
+    <Box component="header">
+      {/* Utility bar */}
+      <Box
+        sx={{
+          display: { xs: "none", md: "flex" },
+          alignItems: "center",
+          bgcolor: "secondary.main",
+          color: "secondary.contrastText",
+          fontSize: 12,
+          px: 5,
+          py: 1,
+          gap: 4,
+        }}
+      >
         {utilityMessages.map((msg) => (
-          <span key={msg}>{msg}</span>
+          <Typography key={msg} variant="body2" sx={{ fontSize: 12, color: "inherit" }}>
+            {msg}
+          </Typography>
         ))}
-        <Link href="/orders/track" className="ml-auto hover:underline">
+        <Typography
+          component={Link}
+          href="/orders/track"
+          variant="body2"
+          sx={{
+            ml: "auto",
+            fontSize: 12,
+            color: "inherit",
+            textDecoration: "none",
+            "&:hover": { textDecoration: "underline" },
+          }}
+        >
           Track your order
-        </Link>
-      </div>
+        </Typography>
+      </Box>
 
       {/* Main bar -- desktop */}
-      <div className="hidden md:grid grid-cols-[220px_1fr_auto] gap-8 items-center px-[40px] py-[18px] rule-bottom">
-        <Logo />
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{
+          display: { xs: "none", md: "flex" },
+          bgcolor: "background.paper",
+          color: "text.primary",
+          borderBottom: "2px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Toolbar
+          disableGutters
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "220px 1fr auto",
+            gap: 4,
+            px: 5,
+            py: 2.25,
+            minHeight: "auto !important",
+          }}
+        >
+          <Logo />
 
-        <div className="relative">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-[12px] top-1/2 -translate-y-1/2 text-neutral-500"
-          />
-          <input
-            type="text"
+          <TextField
             placeholder="Search phones, accessories..."
-            className="w-full h-[42px] border border-divider bg-surface pl-[36px] pr-[12px] text-[14px] text-ink placeholder:text-neutral-500 hover:border-ink/45 focus:border-accent focus:outline-none"
+            size="small"
+            fullWidth
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                  </InputAdornment>
+                ),
+                sx: { fontSize: 14, height: 42 },
+              },
+            }}
           />
-        </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/account"
-            className="inline-flex items-center gap-2 bg-transparent text-ink text-[14px] font-[600] px-[10px] py-[8px] hover:bg-ink/[0.07] transition-colors"
-          >
-            <User size={18} />
-            Sign in
-          </Link>
+          <Box className="flex items-center gap-3">
+            <Button
+              component={Link}
+              href="/account"
+              startIcon={<PersonOutlineIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                color: "text.primary",
+                fontSize: 14,
+                fontWeight: 600,
+                textTransform: "none",
+                letterSpacing: 0,
+              }}
+            >
+              Sign in
+            </Button>
 
-          <Link
-            href="/account/wishlist"
-            className="inline-flex items-center justify-center h-[36px] w-[36px] text-ink hover:bg-ink/[0.07] transition-colors"
-            aria-label="Wishlist"
-          >
-            <Heart size={18} />
-          </Link>
+            <IconButton
+              component={Link}
+              href="/account/wishlist"
+              aria-label="Wishlist"
+              sx={{ color: "text.primary" }}
+            >
+              <FavoriteBorderIcon sx={{ fontSize: 20 }} />
+            </IconButton>
 
-          <Link
-            href="/cart"
-            className="relative inline-flex items-center gap-2 bg-accent text-bg text-[14px] font-[800] px-[14px] py-[8px] min-h-[36px] hover:bg-accent-600 transition-colors"
-          >
-            <ShoppingBag size={18} />
-            Cart
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] bg-bg text-ink text-[11px] font-[800] px-[4px] leading-none">
-              {cartCount}
-            </span>
-          </Link>
-        </div>
-      </div>
+            <Button
+              component={Link}
+              href="/cart"
+              variant="contained"
+              startIcon={<ShoppingBagOutlinedIcon sx={{ fontSize: 18 }} />}
+              sx={{ fontWeight: 800, fontSize: 14, px: 2, minHeight: 36 }}
+            >
+              Cart
+              <Badge
+                badgeContent={cartCount}
+                showZero
+                sx={{
+                  ml: 1.5,
+                  "& .MuiBadge-badge": {
+                    position: "static",
+                    transform: "none",
+                    bgcolor: "background.paper",
+                    color: "text.primary",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    minWidth: 18,
+                    height: 18,
+                  },
+                }}
+              />
+            </Button>
+          </Box>
+        </Toolbar>
+      </AppBar>
 
       {/* Main bar -- mobile */}
-      <div className="flex md:hidden items-center justify-between px-4 py-3 rule-bottom">
-        <button
-          className="inline-flex items-center justify-center h-[36px] w-[36px] text-ink"
-          aria-label="Menu"
-        >
-          <Menu size={22} />
-        </button>
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{
+          display: { xs: "flex", md: "none" },
+          bgcolor: "background.paper",
+          color: "text.primary",
+          borderBottom: "2px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Toolbar className="flex items-center justify-between" sx={{ px: 2, py: 1, minHeight: "auto !important" }}>
+          <IconButton aria-label="Menu" sx={{ color: "text.primary" }}>
+            <MenuIcon />
+          </IconButton>
 
-        <Logo size="small" />
+          <Logo size="small" />
 
-        <Link
-          href="/cart"
-          className="relative inline-flex items-center justify-center h-[36px] w-[36px] text-ink"
-          aria-label="Cart"
-        >
-          <ShoppingBag size={22} />
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[16px] h-[16px] bg-accent text-bg text-[10px] font-[800] px-[3px] leading-none">
-              {cartCount}
-            </span>
-          )}
-        </Link>
-      </div>
+          <IconButton
+            component={Link}
+            href="/cart"
+            aria-label="Cart"
+            sx={{ color: "text.primary" }}
+          >
+            <Badge
+              badgeContent={cartCount}
+              color="primary"
+              invisible={cartCount === 0}
+              sx={{
+                "& .MuiBadge-badge": {
+                  fontSize: 10,
+                  minWidth: 16,
+                  height: 16,
+                },
+              }}
+            >
+              <ShoppingBagOutlinedIcon />
+            </Badge>
+          </IconButton>
+        </Toolbar>
+      </AppBar>
 
       {/* Mobile search row */}
-      <div className="md:hidden px-4 py-2 rule-bottom">
-        <div className="relative">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-[10px] top-1/2 -translate-y-1/2 text-neutral-500"
-          />
-          <input
-            type="text"
-            placeholder="Search phones, accessories..."
-            className="w-full h-[38px] border border-divider bg-surface pl-[34px] pr-[10px] text-[14px] text-ink placeholder:text-neutral-500 focus:border-accent focus:outline-none"
-          />
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: { xs: "block", md: "none" },
+          px: 2,
+          py: 1,
+          borderBottom: "2px solid",
+          borderColor: "divider",
+        }}
+      >
+        <TextField
+          placeholder="Search phones, accessories..."
+          size="small"
+          fullWidth
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                </InputAdornment>
+              ),
+              sx: { fontSize: 14, height: 38 },
+            },
+          }}
+        />
+      </Box>
 
-      {/* Category bar -- hidden on mobile */}
-      <nav className="hidden md:flex items-center gap-7 px-[40px] py-[12px] rule-bottom">
+      {/* Category bar */}
+      <Box
+        component="nav"
+        sx={{
+          display: { xs: "none", md: "flex" },
+          alignItems: "center",
+          gap: 3.5,
+          px: 5,
+          py: 1.5,
+          borderBottom: "2px solid",
+          borderColor: "divider",
+        }}
+      >
         {categories.map((cat) => (
-          <Link
+          <Typography
             key={cat.name}
+            component={Link}
             href={cat.href}
-            className="text-[14px] font-[600] text-ink hover:text-accent transition-colors"
+            sx={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "text.primary",
+              textDecoration: "none",
+              "&:hover": { color: "primary.main" },
+              transition: "color 0.2s",
+            }}
           >
             {cat.name}
-          </Link>
+          </Typography>
         ))}
-        <Link
+        <Typography
+          component={Link}
           href="/categories/deals"
-          className="ml-auto text-[14px] font-[600] text-accent-700 hover:text-accent transition-colors"
+          sx={{
+            ml: "auto",
+            fontSize: 14,
+            fontWeight: 600,
+            color: "primary.dark",
+            textDecoration: "none",
+            "&:hover": { color: "primary.main" },
+            transition: "color 0.2s",
+          }}
         >
           Deals
-        </Link>
-      </nav>
-    </header>
+        </Typography>
+      </Box>
+    </Box>
   );
 }
