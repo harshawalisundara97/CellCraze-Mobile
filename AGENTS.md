@@ -63,8 +63,12 @@ CellCraze is a full-stack e-commerce platform for a mobile accessories shop in S
 
 ## Code Style
 
-- All pages use `"use client"` with mock/static data until APIs are wired up
+- Client pages fetch live data via the `useApi` hook (`src/hooks/use-api.ts`); shared API types/mappers in `src/types/api.ts`. A few admin pages are still on mock data.
 - Zero border radius design (modernist aesthetic)
 - Archivo font family (400/600/800 weights)
 - Keep components small and focused
 - No comments unless explaining a non-obvious "why"
+
+## Core Flows & Build Status
+
+See **CLAUDE.md** for the end-to-end business flows (customer purchase, order → stock deduction, PO → GRN → stock-in), the current build status (what's wired vs. still on mock data), and the roadmap of remaining work.
