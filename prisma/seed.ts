@@ -451,6 +451,97 @@ async function main() {
     await prisma.supplier.create({ data: supplierData });
   }
 
+  // ---- Orders ----
+  const existingOrders = await prisma.order.count();
+  if (existingOrders === 0) {
+    const address = await prisma.address.findFirst({
+      where: { userId: customer.id },
+    });
+    const catalog = await prisma.product.findMany({ take: 8 });
+
+    const addressSnapshot = address
+      ? {
+          recipientName: address.recipientName,
+          phone: address.phone,
+          line1: address.line1,
+          line2: address.line2,
+          city: address.city,
+          province: address.province,
+          postalCode: address.postalCode,
+          country: address.country,
+        }
+      : {};
+
+    const day = 24 * 60 * 60 * 1000;
+    const orderPlans: {
+      status: "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+      method: "STRIPE" | "COD" | "BANK_TRANSFER";
+      paymentStatus: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
+      daysAgo: number;
+      lines: { productIndex: number; quantity: number }[];
+    }[] = [
+      { status: "DELIVERED", method: "STRIPE", paymentStatus: "COMPLETED", daysAgo: 21, lines: [{ productIndex: 0, quantity: 1 }, { productIndex: 2, quantity: 1 }] },
+      { status: "DELIVERED", method: "COD", paymentStatus: "COMPLETED", daysAgo: 16, lines: [{ productIndex: 5, quantity: 2 }] },
+      { status: "SHIPPED", method: "STRIPE", paymentStatus: "COMPLETED", daysAgo: 9, lines: [{ productIndex: 1, quantity: 1 }] },
+      { status: "PROCESSING", method: "BANK_TRANSFER", paymentStatus: "COMPLETED", daysAgo: 5, lines: [{ productIndex: 3, quantity: 1 }, { productIndex: 6, quantity: 1 }] },
+      { status: "CONFIRMED", method: "STRIPE", paymentStatus: "COMPLETED", daysAgo: 2, lines: [{ productIndex: 4, quantity: 1 }] },
+      { status: "PENDING", method: "COD", paymentStatus: "PENDING", daysAgo: 1, lines: [{ productIndex: 7, quantity: 1 }, { productIndex: 0, quantity: 1 }] },
+      { status: "CANCELLED", method: "STRIPE", paymentStatus: "REFUNDED", daysAgo: 12, lines: [{ productIndex: 2, quantity: 1 }] },
+    ];
+
+    let orderSeq = 10001;
+    for (const plan of orderPlans) {
+      const lines = plan.lines
+        .map((l) => ({ product: catalog[l.productIndex], quantity: l.quantity }))
+        .filter((l) => l.product);
+      if (lines.length === 0) continue;
+
+      const subtotal = lines.reduce(
+        (sum, l) => sum + Number(l.product.price) * l.quantity,
+        0,
+      );
+      const shippingCost = subtotal >= 1000000 ? 0 : 50000;
+      const totalAmount = subtotal + shippingCost;
+      const createdAt = new Date(Date.now() - plan.daysAgo * day);
+
+      await prisma.order.create({
+        data: {
+          orderNumber: `CC-${orderSeq++}`,
+          userId: customer.id,
+          addressSnapshot,
+          status: plan.status,
+          subtotal,
+          shippingCost,
+          taxAmount: 0,
+          totalAmount,
+          createdAt,
+          items: {
+            create: lines.map((l) => ({
+              productId: l.product.id,
+              productName: l.product.name,
+              productSku: l.product.sku,
+              unitPrice: Number(l.product.price),
+              quantity: l.quantity,
+              totalPrice: Number(l.product.price) * l.quantity,
+            })),
+          },
+          payment: {
+            create: {
+              method: plan.method,
+              status: plan.paymentStatus,
+              amount: totalAmount,
+              paidAt: plan.paymentStatus === "COMPLETED" ? createdAt : null,
+            },
+          },
+        },
+      });
+    }
+
+    console.log(`Seeded ${orderPlans.length} orders.`);
+  } else {
+    console.log(`Skipped order seeding (${existingOrders} already exist).`);
+  }
+
   console.log("Database seeded successfully!");
   console.log("Admin login: admin@cellcraze.lk / admin123");
   console.log("Customer login: customer@example.com / customer123");
