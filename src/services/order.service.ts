@@ -200,6 +200,22 @@ export async function getOrderById(orderId: string, userId?: string) {
   });
 }
 
+export async function getOrderByIdForAdmin(orderId: string) {
+  return prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: {
+        include: {
+          product: { include: { images: { where: { isPrimary: true }, take: 1 } } },
+        },
+      },
+      payment: true,
+      invoice: true,
+      user: { select: { name: true, email: true, phone: true } },
+    },
+  });
+}
+
 export async function getAllOrders(
   page = 1,
   limit = 20,

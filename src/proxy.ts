@@ -1,16 +1,27 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default auth((req) => {
+const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
+// Auth redirects + security headers. Reading the JWT with getToken is
+// edge-safe (no Prisma adapter — that is what broke the old `auth()`-based
+// middleware). Route handlers still verify the session server-side; this is
+// the gate for page navigations.
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isLoggedIn = !!req.auth;
-  const userRole = (req.auth?.user as any)?.role;
+
+  const secureCookie =
+    req.nextUrl.protocol === "https:" ||
+    req.headers.get("x-forwarded-proto") === "https";
+  const token = await getToken({ req, secret, secureCookie });
+  const isLoggedIn = !!token;
+  const role = (token as { role?: string } | null)?.role;
 
   if (pathname.startsWith("/admin")) {
     if (!isLoggedIn) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    if (userRole !== "ADMIN" && userRole !== "MANAGER") {
+    if (role !== "ADMIN" && role !== "MANAGER") {
       return NextResponse.redirect(new URL("/", req.url));
     }
   }
@@ -24,14 +35,12 @@ export default auth((req) => {
   }
 
   const response = NextResponse.next();
-
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-XSS-Protection", "1; mode=block");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-
   return response;
-});
+}
 
 export const config = {
   matcher: [

@@ -1,14 +1,21 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { AdminTopbar } from "@/components/layout/admin-topbar";
 
 export const instant = false;
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session?.user) redirect("/login");
+  if (role !== "ADMIN" && role !== "MANAGER") redirect("/");
+
   return (
     <div className="flex min-h-screen">
       <Suspense fallback={<div className="w-[240px] bg-neutral-950" />}>
